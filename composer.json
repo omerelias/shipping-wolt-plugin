@@ -1,0 +1,8 @@
+{
+  "require": {
+    "nesbot/carbon": "*",
+    "phpoffice/phpspreadsheet": "^1.8",
+    "yidas/google-maps-services": "^1.0",
+    "alexpechkarev/geometry-library": "1.0.4"
+  }
+}

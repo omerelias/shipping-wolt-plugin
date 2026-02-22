@@ -1,0 +1,409 @@
+/**
+ * All of the CSS for your public-facing functionality should be
+ * included in this file.
+ */
+
+ul#shipping_method li {
+    display: inline-block;
+    margin-left: 20px;
+}
+
+ul#shipping_method li label.disabled {
+    color: grey;
+}
+
+.important-notice {
+    color: red;
+    font-weight: 800;
+}
+
+.notice-button {
+    color: #283891;
+    font-weight: 800;
+}
+
+.checkout-wraper .right-part .header-shipping-methods .ocws-shipping-notices {
+    display: block !important;
+}
+
+.ocws-shipping-notices, ul#shipping_method {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.ocws-shipping-notices .ocws-notice-notice:before {
+    content: '' !important;
+}
+
+.show-shipping-location {
+    margin-top: 10px;
+}
+
+.show-shipping-location p label {
+    display: none;
+}
+
+.show-shipping-location p span.woocommerce-input-wrapper {
+    width: 100%;
+    display: block;
+}
+
+.show-shipping-location p span.woocommerce-input-wrapper select {
+    width: 100%;
+}
+
+.show-shipping-location select {
+
+    border-color: #e8e8e8;
+    border-radius: 50px;
+    height: 45px;
+    padding-right: 20px;
+    font-size: 18px;
+    outline: none;
+    background: url(../images/arrow-point-to-down.svg) 17px 18px no-repeat;
+}
+
+.select2-dropdown {
+    z-index: 999999;
+}
+
+.checkout-wraper .woocommerce-billing-fields .form-row.other-recipient-field.checkbox label {
+    display: block;
+}
+
+.day-data-hidden {
+
+}
+
+.ocws-checkout-choose-city-popup {
+    text-align: center;
+    font-size: 1.263rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999999;
+    right: -99999px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.ocws-checkout-choose-city-popup.shown {
+    opacity: 1;
+    right: 0;
+}
+
+.ocws-checkout-choose-city-popup .white-overlay {
+    position:absolute;
+    top:0;
+    left:0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background-color: #000;
+    opacity: 0.5;
+}
+
+.ocws-checkout-choose-city-popup .inner {
+    max-width: 40rem;
+    width: 100%;
+    margin:0 auto;
+    padding:0;
+    position:absolute;
+    top:15%;
+    right: 0;
+    left:0;
+    bottom:0;
+    z-index: 2;
+}
+
+.ocws-checkout-choose-city-popup .inner-wrapper {
+    border: none;
+    padding: 0;
+    background-color: #fff;
+    width: 100%;
+    height: 450px;
+    border-radius: 4px;position: relative;
+}
+
+.slot-list-container {
+    font-size: inherit !important;
+}
+.slot-list-container .owl-prev.disabled,
+.slot-list-container .owl-next.disabled {
+   visibility: hidden;
+}
+
+.slot-list-container .owl-carousel .owl-controls .owl-nav .owl-next {
+    background-image: url(../images/right_3.jpg);
+    width: 9px;
+    height: 24px;
+    padding: 20px;
+    background-position: center;
+    top: 9px;
+    right: -10px;
+    left: auto;
+}
+.slot-list-container .owl-carousel .owl-controls .owl-nav .owl-prev {
+    background-image: url(../images/left_3.jpg);
+    width: 9px;
+    height: 24px;
+    padding: 20px;
+    background-position: center;
+    top: 9px;
+    left: -10px;
+    right: auto;
+}
+
+.slot-list-container .owl-carousel.owl-rtl .owl-controls .owl-nav .owl-next {
+    background-image: url(../images/left_3.jpg);
+    width: 9px;
+    height: 24px;
+    padding: 20px;
+    background-position: center;
+    top: 9px;
+/*    left: -10px;*/
+    left: -20px;
+    right: auto;
+}
+.slot-list-container .owl-carousel.owl-rtl .owl-controls .owl-nav .owl-prev {
+    background-image: url(../images/right_3.jpg);
+    width: 9px;
+    height: 24px;
+    padding: 20px;
+    background-position: center;
+    top: 9px;
+/*    right: -10px;*/
+    right: -20px;
+    left: auto;
+}
+
+.slot-list-container {
+    margin-left: -10px;
+    margin-right: -10px;
+}
+
+#billing_address_1_field input.select2-search__field,
+#shipping_address_1_field input.select2-search__field{
+    border: none;
+}
+
+#select2-billing_address_1-results .select2-results__option.select2-results__message,
+#select2-shipping_address_1-results .select2-results__option.select2-results__message {
+    font-size: inherit;
+}
+
+input.date_picker_image {
+    background-image: url("../images/X-office-calendar.svg");
+    background-position: 5px center;
+    background-repeat: no-repeat;
+    padding-left: 37px !important;
+    background-size: 25px;
+}
+
+.ui-datepicker-header.ui-widget-header.ui-helper-clearfix.ui-corner-all {
+    color: black;
+    background-color: #e9e9e9 !important;
+}
+
+#ui-datepicker-div .ui-widget-header .ui-icon {
+    background-image: url("../images/ui-icons_444444_256x240.png") !important;
+}
+
+.ocws-hidden-form-field, .form-row.ocws-hidden-form-field {
+    display: none !important;
+    margin: 0;
+    padding: 0;
+}
+
+.choose-shipping-popup .oc-woo-pickup-additional-title {
+/*    display: none;*/
+}
+
+.choose-shipping-popup .oc-woo-pickup-additional-title {
+    font-size: 18px;
+    color: #102326;
+    line-height: 1;
+    text-align: right;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.address-autocomplete-field {
+    grid-column-start: 1;
+    grid-column-end: 5;
+    margin: 0;
+    width: unset;
+}
+
+.address-autocomplete-field label {
+    display: block !important;
+}
+
+.shipping-det p#billing_city_name_field {
+    grid-column-start: 1;
+    grid-column-end: 7;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.pac-container {
+    z-index: 1000000;
+}
+
+#billing_house_num_field.ocws-polygon-related label {
+    visibility: hidden;
+    display: block;
+}
+
+.woocommerce-billing-fields__field-wrapper.fields-wrapper.shipping-det {
+    gap: 18px !important;
+}
+
+.ocws-checkout-inputs-pp span.error, #ocws-checkout-choose-city-form span.error {
+    display: block;
+    font-size: 12px;
+    color: red;
+}
+
+.ocws-checkout-inputs-pp {
+    margin-top: 10px;
+}
+.ocws-checkout-inputs-pp .ocws-checkout-pac-input {
+    display: block;
+    width: 100%;
+}
+
+.choose-shipping-popup #oc-woo-shipping-additional--message .second  {
+    display: none;
+}
+
+.choose-shipping-popup #oc-woo-shipping-additional--message .first {
+    font-size: 14px;
+    text-align: left;
+    margin-top: 20px;
+}
+
+.rtl .choose-shipping-popup #oc-woo-shipping-additional--message .first {
+    text-align: right;
+}
+
+ .ocws-checkout-choose-city-popup.choose-shipping-popup  #checkout-popup-submit-btn,
+.ocws-checkout-choose-city-popup.choose-shipping-popup button.button.btn-primary,
+.ocws-checkout-choose-city-popup.choose-shipping-popup a.button {
+    color: #000!important;
+    background-color:#a5b5aa;
+}
+
+ .ocws-checkout-choose-city-popup.choose-shipping-popup  #checkout-popup-submit-btn:hover,
+.ocws-checkout-choose-city-popup.choose-shipping-popup button.button.btn-primary:hover,
+.ocws-checkout-choose-city-popup.choose-shipping-popup a.button:hover {
+    background-color:#000!important ;
+    color:#fff!important ;
+}
+
+.choose-city-form--wrapper {
+    display: none;
+}
+
+.active-city-form .choose-city-form--wrapper {
+    display: block;
+}
+
+.active-city-form .ajax-message,
+.active-city-form .pop-close, 
+.active-city-form  button.choose-city ,
+.active-city-form .additional-controlls {
+    display: none;
+}
+
+.additional-controlls {
+    margin: 20px 0 0;
+}
+
+.ocws-checkout-choose-city-popup .back-to-main-popup {
+    border: none;
+    color: #000;
+}
+
+.choose-shipping-popup button.back-to-main-popup,
+.choose-shipping-popup button.choose-city {
+    border: none;
+    color: #000;
+    background-color: transparent;   
+    text-decoration: underline;
+}
+
+#popup-shipping-form-messages span.loading{
+    position: absolute;
+}
+
+.choose-shipping-popup.hide-cross .pop-close {
+    display: none;
+}
+
+.ocws-checkout-choose-city-popup .ajax-message .first {
+    font-size: 21px;
+}
+
+.ocws-checkout-choose-city-popup .ajax-message .second {
+    font-size: 15px;
+}
+
+.ocws-checkout-choose-city-popup .ajax-message .star {
+    display: none   ;
+}
+
+.ocws-checkout-choose-city-popup .additional-controlls a.popup-shipping-controll {
+    margin-left: 15px;
+}
+
+@media only screen and (max-width: 600px){
+    .ocws-checkout-choose-city-popup .ajax-message .first {
+        font-size: 1rem;
+    }
+
+    .woocommerce-checkout .ocws-checkout-choose-city-popup.shown .inner-wrapper {
+        padding: 40px 10px;
+    }
+}
+
+@media only screen and (max-width: 480px){
+    .ocws-checkout-choose-city-popup .ajax-message .first {
+        font-size: .9rem;
+    }
+
+    .ocws-checkout-choose-city-popup .ajax-message .second {
+        font-size: .8rem;
+    }
+
+    .ocws-checkout-choose-city-popup .additional-controlls a.popup-shipping-controll {
+        margin-left: 5px;
+    }
+
+    .ocws-checkout-choose-city-popup.choose-shipping-popup  #checkout-popup-submit-btn,
+    .ocws-checkout-choose-city-popup.choose-shipping-popup button.button.btn-primary,
+    .ocws-checkout-choose-city-popup.choose-shipping-popup a.button {
+        padding: 5px 15px;   
+    }
+
+}
+
+@media only screen and (max-width: 350px){
+    .ocws-checkout-choose-city-popup .ajax-message .first {
+        font-size: .85rem;
+    }
+}
+
+/* Day-limit: hide Quickview/add-to-cart when product not available for c hosen day */
+.ocws-day-limit-hidden,
+li.product.ocws-day-limit-unavailable .iconic-wqv-button,
+li.product.ocws-day-limit-unavailable [data-jckqvpid] {
+    display: none !important;
+}
+
+/* Day-limit: li needs position relative so :before overlay is placed correctly */
+li.product.ocws-day-limit-unavailable {
+    position: relative;
+}
