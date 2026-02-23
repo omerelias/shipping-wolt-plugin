@@ -111,7 +111,7 @@ class Oc_Woo_Shipping_Public {
 
 		// Day-limit: hide add-to-cart/Quickview when li has ocws-day-limit-unavailable
 		if ( is_shop() || is_product_taxonomy() || is_post_type_archive( 'product' ) ) {
-			$ocws_day_limit_js = "(function(\$){ function run(){ \$('.product.ocws-day-limit-unavailable').each(function(){ var \$p=\$(this); var sel='.add_to_cart_button, a[href*=\"add-to-cart\"], button[name=\"add-to-cart\"], [data-jckqvpid], a.iconic-wqv-button, button.iconic-wqv-button'; \$p.find(sel).addClass('ocws-day-limit-hidden').hide(); }); } \$(function(){ run(); \$(window).on('load', run); }); })(jQuery);";
+			$ocws_day_limit_js = "(function(\$){ function run(){ \$('.product.ocws-day-limit-unavailable').each(function(){ var \$p=\$(this); var sel='.add_to_cart_button, a[href*=\"add-to-cart\"], button[name=\"add-to-cart\"], [data-jckqvpid], a.iconic-wqv-button, button.iconic-wqv-button, .quantity-wraper, .quantity-wraper-by-units'; \$p.find(sel).addClass('ocws-day-limit-hidden').hide(); }); } \$(function(){ run(); \$(window).on('load', run); }); })(jQuery);";
 			wp_add_inline_script( $this->plugin_name, $ocws_day_limit_js, 'after' );
 		} 
 

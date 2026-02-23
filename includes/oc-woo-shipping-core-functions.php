@@ -230,14 +230,7 @@ function ocws_render_shipping_additional_fields()
     }
     // Check for out of service area error
     $error_message = ocws_render_out_of_service_error($location_code);
-    if(!$location_code){
-        ?>
-        <div id="oc-woo-shipping-additional">
-        </div>
-        <?php
-        return;
-    }
-    else if (!empty($error_message)) {
+if (!empty($error_message)) {
         ?>
         <div id="oc-woo-shipping-additional">
             <?php echo $error_message; ?>
