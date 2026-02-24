@@ -1,6 +1,7 @@
 ( function( $, wp, ajaxurl ) {
     $( function() {
         var input = $(".ocws-admin-pac-input");
+        if (input.length && input[0]) {
         var options = {
             componentRestrictions: { country: "il" },
             fields: ["address_components", "geometry", "place_id", "name"],
@@ -84,8 +85,10 @@
             }
             console.log(place);
         });
+        }
 
         var restrict_streets_pac_input = $(".ocws-admin-restrict-pac-input");
+        if (restrict_streets_pac_input.length && restrict_streets_pac_input[0]) {
         var restrict_streets_options = {
             componentRestrictions: { country: "il" },
             fields: ["address_components", "geometry", "place_id", "name"],
@@ -106,6 +109,23 @@
 
             console.log(place);
         });
+        }
+
+        // Wolt pickup address (venue) – full address autocomplete for admin settings
+        var woltPickupInput = $(".ocws-wolt-pickup-autocomplete");
+        if (woltPickupInput.length && woltPickupInput[0]) {
+            var woltPickupOptions = {
+                fields: ["formatted_address", "address_components", "geometry"],
+                types: ["address"]
+            };
+            var woltPickupAutocomplete = new google.maps.places.Autocomplete(woltPickupInput[0], woltPickupOptions);
+            google.maps.event.addListener(woltPickupAutocomplete, 'place_changed', function () {
+                var place = woltPickupAutocomplete.getPlace();
+                if (place && place.formatted_address) {
+                    woltPickupInput.val(place.formatted_address);
+                }
+            });
+        }
     });
 })( jQuery, wp, ajaxurl );
 

@@ -174,9 +174,18 @@ class OCWS_Wolt_Settings {
 		<tr valign="top">
 			<th scope="row"><?php esc_html_e( 'Pickup address (venue)', 'ocws' ); ?></th>
 			<td>
-				<?php $pickup_address = get_option( self::OPTION_PICKUP_ADDRESS, '' ); ?>
-				<textarea name="<?php echo esc_attr( self::OPTION_PICKUP_ADDRESS ); ?>" rows="3" class="large-text" placeholder="<?php echo esc_attr( self::get_woocommerce_store_address_formatted() ); ?>"><?php echo esc_textarea( $pickup_address ); ?></textarea>
-				<p class="description"><?php esc_html_e( 'Address where the courier picks up the order. Leave empty to use the WooCommerce store address (WooCommerce → Settings → General). Required for white-label: set per site.', 'ocws' ); ?></p>
+				<?php
+				$pickup_address = get_option( self::OPTION_PICKUP_ADDRESS, '' );
+				$store_fallback = self::get_woocommerce_store_address_formatted();
+				?>
+				<input type="text"
+					name="<?php echo esc_attr( self::OPTION_PICKUP_ADDRESS ); ?>"
+					id="ocws_wolt_pickup_address"
+					class="regular-text ocws-wolt-pickup-autocomplete"
+					value="<?php echo esc_attr( $pickup_address ); ?>"
+					placeholder="<?php echo esc_attr( $store_fallback ); ?>"
+					autocomplete="off" />
+				<p class="description"><?php esc_html_e( 'Address where the courier picks up the order. Start typing for Google address suggestions (uses the same Google Maps API key as in General Settings). Leave empty to use the WooCommerce store address.', 'ocws' ); ?></p>
 			</td>
 		</tr>
 		<tr valign="top">
