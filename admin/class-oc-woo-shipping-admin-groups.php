@@ -790,6 +790,12 @@ class OC_Woo_Shipping_Admin_Groups {
 					<td><input type="text" name="ocws_default_min_total_for_free_shipping" value="<?php echo esc_attr( get_option('ocws_default_min_total_for_free_shipping') ); ?>" /></td>
 				</tr>
 
+				<?php
+				if ( class_exists( 'OCWS_Wolt_Settings' ) ) {
+					OCWS_Wolt_Settings::render_settings_section();
+				}
+				?>
+
 				<tr valign="top" style="display: none;">
 					<th scope="row"><?php echo __('Latest hour to order today', 'ocws') ?></th>
 					<td><input style="position: relative; z-index: 100000;" class="timepicker latest-hour" type="text" name="ocws_default_max_hour_for_today" value="<?php echo esc_attr( get_option('ocws_default_max_hour_for_today') ); ?>" /></td>

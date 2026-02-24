@@ -271,6 +271,12 @@ class Oc_Woo_Shipping {
          */
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ocws-admin-shipping.php';
 
+        /*
+         * Wolt Drive integration
+         */
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/wolt/class-ocws-wolt.php';
+        OCWS_Wolt::load();
+
         $this->loader = new Oc_Woo_Shipping_Loader();
 
     }
