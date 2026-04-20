@@ -94,23 +94,87 @@ class OCWS_Wolt_Delivery_Trigger {
 	 * @return array
 	 */
 	protected static function build_delivery_payload( $order ) {
+		$name = trim( $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name() );
+		if ( '' === $name ) {
+			$name = trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() );
+		}
+
+		$phone = $order->get_meta( '_shipping_phone' );
+		if ( ! $phone ) {
+			$phone = $order->get_billing_phone();
+		}
+
+		$dropoff = array(
+			'location' => array(
+				'formatted_address' => $order->get_formatted_shipping_address(),
+			),
+		);
+		$comments = self::build_dropoff_comments( $order );
+		if ( '' !== $comments ) {
+			$dropoff['comments'] = $comments;
+		}
+
 		$payload = array(
-			'pickup' => array(
+			'merchant_order_reference_id' => (string) $order->get_id(),
+			'pickup'                      => array(
 				'location' => array(
 					'formatted_address' => OCWS_Wolt_Settings::get_pickup_address(),
 				),
 			),
-			'dropoff' => array(
-				'location' => array(
-					'formatted_address' => $order->get_formatted_shipping_address(),
-				),
+			'dropoff'                     => $dropoff,
+			'recipient'                   => array(
+				'name'         => $name,
+				'phone_number' => $phone,
 			),
 		);
+
 		$scheduled = self::get_scheduled_dropoff_time_iso8601( $order );
 		if ( $scheduled ) {
 			$payload['scheduled_dropoff_time'] = $scheduled;
 		}
 		return $payload;
+	}
+
+	/**
+	 * Build dropoff comments from floor, apartment, enter code, leave-at-door flag, and customer note.
+	 *
+	 * @param WC_Order $order Order.
+	 * @return string
+	 */
+	protected static function build_dropoff_comments( $order ) {
+		$order_id = $order->get_id();
+
+		$floor      = get_post_meta( $order_id, '_shipping_floor', true );
+		if ( ! $floor ) {
+			$floor = get_post_meta( $order_id, '_billing_floor', true );
+		}
+		$apartment  = get_post_meta( $order_id, '_shipping_apartment', true );
+		if ( ! $apartment ) {
+			$apartment = get_post_meta( $order_id, '_billing_apartment', true );
+		}
+		$enter_code = get_post_meta( $order_id, '_shipping_enter_code', true );
+		if ( ! $enter_code ) {
+			$enter_code = get_post_meta( $order_id, '_billing_enter_code', true );
+		}
+
+		$parts = array();
+		if ( $floor ) {
+			$parts[] = sprintf( __( 'Floor: %s', 'ocws' ), $floor );
+		}
+		if ( $apartment ) {
+			$parts[] = sprintf( __( 'Apartment: %s', 'ocws' ), $apartment );
+		}
+		if ( $enter_code ) {
+			$parts[] = sprintf( __( 'Door code: %s', 'ocws' ), $enter_code );
+		}
+		if ( 1 == get_post_meta( $order_id, 'ocws_leave_at_the_door', true ) ) {
+			$parts[] = __( 'Leave at the door', 'ocws' );
+		}
+		$note = $order->get_customer_note();
+		if ( $note ) {
+			$parts[] = $note;
+		}
+		return implode( '. ', $parts );
 	}
 
 	/**
