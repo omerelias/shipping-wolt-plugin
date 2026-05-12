@@ -20,6 +20,13 @@ class OCWS_Wolt_Settings {
 	const OPTION_API_URL           = 'ocws_wolt_api_url';
 	const OPTION_API_KEY           = 'ocws_wolt_api_key';
 	const OPTION_PICKUP_ADDRESS    = 'ocws_wolt_pickup_address';
+	const OPTION_VENUE_ID          = 'ocws_wolt_venue_id';
+	const OPTION_MERCHANT_ID       = 'ocws_wolt_merchant_id';
+	const OPTION_WEBHOOK_SECRET    = 'ocws_wolt_webhook_secret';
+	const OPTION_CURRENCY          = 'ocws_wolt_currency';
+
+	const DEFAULT_SANDBOX_URL = 'https://daas-public-api.development.dev.woltapi.com';
+	const DEFAULT_PRODUCTION_URL = 'https://daas-public-api.wolt.com';
 
 	/**
 	 * Register Wolt options with WordPress.
@@ -30,9 +37,53 @@ class OCWS_Wolt_Settings {
 		register_setting( 'ocws_default', self::OPTION_DISPATCH_OFFSET, array( 'default' => '30' ) );
 		register_setting( 'ocws_default', self::OPTION_MARKUP_TYPE, array( 'default' => 'fixed' ) );
 		register_setting( 'ocws_default', self::OPTION_MARKUP_VALUE, array( 'default' => '0' ) );
-		register_setting( 'ocws_default', self::OPTION_API_URL, array( 'default' => '' ) );
+		register_setting( 'ocws_default', self::OPTION_API_URL, array( 'default' => self::DEFAULT_SANDBOX_URL ) );
 		register_setting( 'ocws_default', self::OPTION_API_KEY, array( 'default' => '' ) );
 		register_setting( 'ocws_default', self::OPTION_PICKUP_ADDRESS, array( 'default' => '' ) );
+		register_setting( 'ocws_default', self::OPTION_VENUE_ID, array( 'default' => '' ) );
+		register_setting( 'ocws_default', self::OPTION_MERCHANT_ID, array( 'default' => '' ) );
+		register_setting( 'ocws_default', self::OPTION_WEBHOOK_SECRET, array( 'default' => '' ) );
+		register_setting( 'ocws_default', self::OPTION_CURRENCY, array( 'default' => 'ILS' ) );
+	}
+
+	/**
+	 * Get configured venue ID for Wolt.
+	 *
+	 * @return string
+	 */
+	public static function get_venue_id() {
+		return trim( (string) get_option( self::OPTION_VENUE_ID, '' ) );
+	}
+
+	/**
+	 * Get configured merchant ID for Wolt.
+	 *
+	 * @return string
+	 */
+	public static function get_merchant_id() {
+		return trim( (string) get_option( self::OPTION_MERCHANT_ID, '' ) );
+	}
+
+	/**
+	 * Get webhook secret used to verify JWT signatures from Wolt.
+	 *
+	 * @return string
+	 */
+	public static function get_webhook_secret() {
+		return (string) get_option( self::OPTION_WEBHOOK_SECRET, '' );
+	}
+
+	/**
+	 * Get currency code (ISO 4217) used for parcels/prices.
+	 *
+	 * @return string
+	 */
+	public static function get_currency() {
+		$c = trim( (string) get_option( self::OPTION_CURRENCY, '' ) );
+		if ( '' === $c ) {
+			$c = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : 'ILS';
+		}
+		return strtoupper( $c );
 	}
 
 	/**
@@ -168,7 +219,37 @@ class OCWS_Wolt_Settings {
 			<th scope="row"><?php esc_html_e( 'Wolt API Key', 'ocws' ); ?></th>
 			<td>
 				<input type="password" name="<?php echo esc_attr( self::OPTION_API_KEY ); ?>" value="<?php echo esc_attr( $api_key ); ?>" class="regular-text" autocomplete="off" />
-				<p class="description"><?php esc_html_e( 'Bearer token for Wolt Drive API.', 'ocws' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Bearer token (Merchant Key) for Wolt Drive API.', 'ocws' ); ?></p>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><?php esc_html_e( 'Venue ID', 'ocws' ); ?></th>
+			<td>
+				<input type="text" name="<?php echo esc_attr( self::OPTION_VENUE_ID ); ?>" value="<?php echo esc_attr( get_option( self::OPTION_VENUE_ID, '' ) ); ?>" class="regular-text" autocomplete="off" />
+				<p class="description"><?php esc_html_e( 'Wolt Venue ID for this pickup location. Used in venueful endpoint paths.', 'ocws' ); ?></p>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><?php esc_html_e( 'Merchant ID', 'ocws' ); ?></th>
+			<td>
+				<input type="text" name="<?php echo esc_attr( self::OPTION_MERCHANT_ID ); ?>" value="<?php echo esc_attr( get_option( self::OPTION_MERCHANT_ID, '' ) ); ?>" class="regular-text" autocomplete="off" />
+				<p class="description"><?php esc_html_e( 'Wolt Merchant ID. Used in venueless endpoints (delivery-areas, available-venues).', 'ocws' ); ?></p>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><?php esc_html_e( 'Webhook secret', 'ocws' ); ?></th>
+			<td>
+				<?php $webhook_secret = get_option( self::OPTION_WEBHOOK_SECRET, '' ); ?>
+				<input type="text" id="ocws_wolt_webhook_secret_input" name="<?php echo esc_attr( self::OPTION_WEBHOOK_SECRET ); ?>" value="<?php echo esc_attr( $webhook_secret ); ?>" class="regular-text" autocomplete="off" />
+				<button type="button" class="button" onclick="(function(){var s=''; var c='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; var arr=new Uint8Array(48); window.crypto.getRandomValues(arr); for(var i=0;i&lt;arr.length;i++){s+=c[arr[i]%c.length];} document.getElementById('ocws_wolt_webhook_secret_input').value=s;})();"><?php esc_html_e( 'Generate', 'ocws' ); ?></button>
+				<p class="description"><?php esc_html_e( 'Shared secret you provide to Wolt when registering the webhook. Used to verify JWT signatures on incoming webhooks. Keep at least 32 chars.', 'ocws' ); ?></p>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><?php esc_html_e( 'Currency', 'ocws' ); ?></th>
+			<td>
+				<input type="text" name="<?php echo esc_attr( self::OPTION_CURRENCY ); ?>" value="<?php echo esc_attr( get_option( self::OPTION_CURRENCY, 'ILS' ) ); ?>" class="small-text" maxlength="3" />
+				<p class="description"><?php esc_html_e( 'ISO 4217 currency code used for parcel prices (default ILS).', 'ocws' ); ?></p>
 			</td>
 		</tr>
 		<tr valign="top">

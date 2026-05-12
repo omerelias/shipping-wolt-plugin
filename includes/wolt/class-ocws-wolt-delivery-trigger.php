@@ -26,7 +26,7 @@ class OCWS_Wolt_Delivery_Trigger {
 	}
 
 	/**
-	 * When order reaches trigger status: create Wolt delivery, save meta, add order note.
+	 * When order reaches trigger status: create Wolt delivery (auto path).
 	 *
 	 * @param int      $order_id Order ID.
 	 * @param WC_Order $order    Order (optional).
@@ -41,19 +41,35 @@ class OCWS_Wolt_Delivery_Trigger {
 		if ( ! $order ) {
 			return;
 		}
-		// Only for orders that used OC advanced shipping (delivery).
-		$is_oc_shipping = false;
-		foreach ( $order->get_shipping_methods() as $item ) {
-			if ( strpos( $item->get_method_id(), 'oc_woo_advanced_shipping_method' ) === 0 ) {
-				$is_oc_shipping = true;
-				break;
+		self::create_for_order( $order, false );
+	}
+
+	/**
+	 * Create a Wolt delivery for an order (used both by status hook and admin "Create now" button).
+	 *
+	 * @param WC_Order $order Order.
+	 * @param bool     $manual If true, called from admin button: bypass shipping-method check, return result array.
+	 * @return array{ success: bool, delivery_id?: string, tracking_url?: string, error?: string }
+	 */
+	public static function create_for_order( $order, $manual = false ) {
+		if ( ! OCWS_Wolt_Api::is_configured() ) {
+			return array( 'success' => false, 'error' => __( 'Wolt API not configured.', 'ocws' ) );
+		}
+		// In auto mode, only act on orders that used OC advanced shipping.
+		if ( ! $manual ) {
+			$is_oc_shipping = false;
+			foreach ( $order->get_shipping_methods() as $item ) {
+				if ( strpos( $item->get_method_id(), 'oc_woo_advanced_shipping_method' ) === 0 ) {
+					$is_oc_shipping = true;
+					break;
+				}
+			}
+			if ( ! $is_oc_shipping ) {
+				return array( 'success' => false, 'error' => 'not_oc_shipping' );
 			}
 		}
-		if ( ! $is_oc_shipping ) {
-			return;
-		}
 		if ( $order->get_meta( self::META_DELIVERY_ID ) ) {
-			return; // Already created.
+			return array( 'success' => false, 'error' => __( 'Wolt delivery already exists for this order.', 'ocws' ) );
 		}
 		$payload = self::build_delivery_payload( $order );
 		$result  = OCWS_Wolt_Api::create_delivery( $order, $payload );
@@ -85,6 +101,7 @@ class OCWS_Wolt_Delivery_Trigger {
 				)
 			);
 		}
+		return $result;
 	}
 
 	/**
@@ -116,6 +133,7 @@ class OCWS_Wolt_Delivery_Trigger {
 
 		$payload = array(
 			'merchant_order_reference_id' => (string) $order->get_id(),
+			'order_number'                => (string) $order->get_order_number(),
 			'pickup'                      => array(
 				'location' => array(
 					'formatted_address' => OCWS_Wolt_Settings::get_pickup_address(),
@@ -126,6 +144,7 @@ class OCWS_Wolt_Delivery_Trigger {
 				'name'         => $name,
 				'phone_number' => $phone,
 			),
+			'parcels'                     => self::build_parcels( $order ),
 		);
 
 		$scheduled = self::get_scheduled_dropoff_time_iso8601( $order );
@@ -133,6 +152,47 @@ class OCWS_Wolt_Delivery_Trigger {
 			$payload['scheduled_dropoff_time'] = $scheduled;
 		}
 		return $payload;
+	}
+
+	/**
+	 * Build parcels list from WC order line items. Wolt requires at least one parcel
+	 * with description, identifier, and a price object { amount, currency }.
+	 *
+	 * @param WC_Order $order Order.
+	 * @return array
+	 */
+	protected static function build_parcels( $order ) {
+		$currency = OCWS_Wolt_Settings::get_currency();
+		$parcels  = array();
+		foreach ( $order->get_items() as $item_id => $item ) {
+			if ( ! $item instanceof WC_Order_Item_Product ) {
+				continue;
+			}
+			$qty   = max( 1, (int) $item->get_quantity() );
+			$total = (float) $item->get_total() + (float) $item->get_total_tax();
+			$unit  = $qty > 0 ? ( $total / $qty ) : $total;
+			for ( $i = 0; $i < $qty; $i++ ) {
+				$parcels[] = array(
+					'description' => $item->get_name(),
+					'identifier'  => sprintf( '%d-%d-%d', $order->get_id(), $item_id, $i ),
+					'price'       => array(
+						'amount'   => round( $unit, 2 ),
+						'currency' => $currency,
+					),
+				);
+			}
+		}
+		if ( empty( $parcels ) ) {
+			$parcels[] = array(
+				'description' => sprintf( __( 'Order #%s', 'ocws' ), $order->get_order_number() ),
+				'identifier'  => (string) $order->get_id(),
+				'price'       => array(
+					'amount'   => round( (float) $order->get_total() - (float) $order->get_shipping_total(), 2 ),
+					'currency' => $currency,
+				),
+			);
+		}
+		return $parcels;
 	}
 
 	/**
