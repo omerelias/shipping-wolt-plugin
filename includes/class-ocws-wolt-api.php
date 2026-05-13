@@ -121,15 +121,18 @@ class OCWS_Wolt_Api {
 		}
 		$body = self::build_shipment_promise_body( $destination );
 
-		// Skip the API call when we cannot satisfy Wolt's minimum payload
-		// (Wolt needs post_code OR street+city — sending an empty body
-		// yields "Input should be a valid dictionary" and just spams logs).
-		$has_address = isset( $body['address'] ) && (
-			! empty( $body['address']['post_code'] ) ||
-			( ! empty( $body['address']['street'] ) && ! empty( $body['address']['city'] ) )
-		);
+		// Wolt needs post_code OR (street AND city) at the root of the body.
+		// Anything less and the validator rejects — skip the call to avoid
+		// log spam on every initial checkout render.
+		$has_address = ! empty( $body['post_code'] )
+			|| ( ! empty( $body['street'] ) && ! empty( $body['city'] ) );
 		if ( ! $has_address ) {
 			return array( 'success' => false, 'error' => 'insufficient_address' );
+		}
+
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( '[OC Wolt SP] destination: ' . wp_json_encode( $destination, JSON_UNESCAPED_UNICODE ) );
+			error_log( '[OC Wolt SP] body: ' . wp_json_encode( $body, JSON_UNESCAPED_UNICODE ) );
 		}
 
 		$resp = self::request( 'POST', $endpoint, $body, 15 );
@@ -153,46 +156,40 @@ class OCWS_Wolt_Api {
 	}
 
 	/**
-	 * Build request body for shipment-promises from package destination.
+	 * Build the request body for POST /v1/venues/{venue_id}/shipment-promises.
 	 *
-	 * Wolt's API requires either `post_code` OR (`street` AND `city`). Field
-	 * names are exact: `street`, `city`, `post_code` (underscore, not camel,
-	 * not `street_address`/`postal_code` — the docs were misleading).
+	 * Wolt expects **flat fields at the root**, not nested under `address` —
+	 * the documented schema is `{ street, city, post_code, lat, lon, ... }`.
+	 * Their validator enforces "post_code OR (street AND city)" against the
+	 * root of the body. The coordinate key is `lon`, not `lng`.
 	 *
 	 * The OC Advanced Shipping plugin populates the destination with its own
 	 * keys (`street`, `house_num`, `city_name`) from the Google autocomplete
 	 * flow; WC's standard `address` / `address_1` / `city` keys are usually
-	 * empty in that setup, so we try several sources in priority order.
+	 * empty in that setup, so resolve_* tries several sources.
 	 *
 	 * @param array $destination From $package['destination'].
-	 * @return array
+	 * @return array Flat body suitable for wp_json_encode.
 	 */
 	protected static function build_shipment_promise_body( $destination ) {
 		$body = array();
-
-		if ( ! empty( $destination['address_coords']['lat'] ) && ! empty( $destination['address_coords']['lng'] ) ) {
-			$body['location'] = array(
-				'lat' => (float) $destination['address_coords']['lat'],
-				'lng' => (float) $destination['address_coords']['lng'],
-			);
-		}
 
 		$street = self::resolve_street( $destination );
 		$city   = self::resolve_city( $destination );
 		$post   = isset( $destination['postcode'] ) ? trim( (string) $destination['postcode'] ) : '';
 
-		$address = array();
 		if ( '' !== $street ) {
-			$address['street'] = $street;
+			$body['street'] = $street;
 		}
 		if ( '' !== $city ) {
-			$address['city'] = $city;
+			$body['city'] = $city;
 		}
 		if ( '' !== $post ) {
-			$address['post_code'] = $post;
+			$body['post_code'] = $post;
 		}
-		if ( ! empty( $address ) ) {
-			$body['address'] = $address;
+		if ( ! empty( $destination['address_coords']['lat'] ) && ! empty( $destination['address_coords']['lng'] ) ) {
+			$body['lat'] = (float) $destination['address_coords']['lat'];
+			$body['lon'] = (float) $destination['address_coords']['lng'];
 		}
 
 		return $body;
