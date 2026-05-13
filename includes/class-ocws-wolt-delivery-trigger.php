@@ -19,10 +19,13 @@ class OCWS_Wolt_Delivery_Trigger {
 	const META_LAST_ERROR = '_ocws_wolt_last_error';
 
 	/**
-	 * Register dynamic status hook.
+	 * Register dynamic status hook. WC fires woocommerce_order_status_{slug}
+	 * WITHOUT the `wc-` prefix (`pending`, `processing`, …) — but
+	 * wc_get_order_statuses() returns keys WITH the prefix (`wc-pending`).
+	 * Strip it so the hook actually matches.
 	 */
 	public static function init() {
-		$status = OCWS_Wolt_Settings::get_trigger_status();
+		$status = preg_replace( '/^wc-/', '', OCWS_Wolt_Settings::get_trigger_status() );
 		add_action( 'woocommerce_order_status_' . $status, array( __CLASS__, 'on_trigger_status' ), 10, 2 );
 	}
 
@@ -186,35 +189,50 @@ class OCWS_Wolt_Delivery_Trigger {
 			'address_1' => $order->get_shipping_address_1(),
 		);
 
-		$street = OCWS_Wolt_Api::resolve_street( $bag );
-		$city   = OCWS_Wolt_Api::resolve_city( $bag );
-		$post   = $order->get_shipping_postcode();
+		$street  = OCWS_Wolt_Api::resolve_street( $bag );
+		$city    = OCWS_Wolt_Api::resolve_city( $bag );
+		$post    = $order->get_shipping_postcode();
+		$country = $order->get_shipping_country();
 
-		$location = array();
-		if ( '' !== $street || '' !== $city ) {
-			$location['street']    = $street;
-			$location['city']      = $city;
-			$location['country']   = $order->get_shipping_country();
+		// Wolt's create-delivery validator: "Either 'shipment_promise_id'
+		// or 'dropoff.location.address' must be defined". Build a single
+		// formatted address string and put it in `address`. Helpful
+		// structured fields go alongside.
+		$address_parts = array_filter( array( $street, $city, $post, $country ) );
+		$location      = array(
+			'address' => implode( ', ', $address_parts ),
+		);
+		if ( '' !== $city ) {
+			$location['city'] = $city;
 		}
 		if ( '' !== $post ) {
 			$location['post_code'] = $post;
 		}
+		if ( '' !== $country ) {
+			$location['country'] = $country;
+		}
 
 		// Optional lat/lng if the host plugin saved it.
+		$lat = null;
+		$lng = null;
 		if ( is_array( $coords ) && ! empty( $coords['lat'] ) && ! empty( $coords['lng'] ) ) {
-			$location['lat'] = (float) $coords['lat'];
-			$location['lng'] = (float) $coords['lng'];
+			$lat = (float) $coords['lat'];
+			$lng = (float) $coords['lng'];
 		} elseif ( is_string( $coords ) && '' !== $coords ) {
 			$decoded = json_decode( $coords, true );
 			if ( is_array( $decoded ) && ! empty( $decoded['lat'] ) && ! empty( $decoded['lng'] ) ) {
-				$location['lat'] = (float) $decoded['lat'];
-				$location['lng'] = (float) $decoded['lng'];
+				$lat = (float) $decoded['lat'];
+				$lng = (float) $decoded['lng'];
 			}
 		}
+		if ( null !== $lat && null !== $lng ) {
+			$location['lat'] = $lat;
+			$location['lng'] = $lng;
+		}
 
-		// Last-ditch fallback so we never send an empty location.
-		if ( empty( $location ) ) {
-			$location['formatted_address'] = $order->get_formatted_shipping_address();
+		// Last-ditch: ensure `address` is never empty (use WC's formatted shipping).
+		if ( '' === $location['address'] ) {
+			$location['address'] = $order->get_formatted_shipping_address();
 		}
 		return $location;
 	}

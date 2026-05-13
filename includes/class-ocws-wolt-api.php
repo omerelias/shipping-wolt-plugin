@@ -256,7 +256,17 @@ class OCWS_Wolt_Api {
 		if ( null === $endpoint ) {
 			return array( 'success' => false, 'error' => __( 'Wolt API URL or Venue ID not configured.', 'oc-wolt-drive' ) );
 		}
+
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( '[OC Wolt CD] body: ' . wp_json_encode( $payload, JSON_UNESCAPED_UNICODE ) );
+		}
+
 		$resp = self::request( 'POST', $endpoint, $payload, 20 );
+
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( '[OC Wolt CD] response (HTTP ' . $resp['code'] . '): ' . wp_json_encode( is_array( $resp['body'] ) ? $resp['body'] : array( 'raw' => $resp['error'] ), JSON_UNESCAPED_UNICODE ) );
+		}
+
 		if ( $resp['error'] && $resp['code'] === 0 ) {
 			return array( 'success' => false, 'error' => $resp['error'] );
 		}
