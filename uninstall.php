@@ -21,6 +21,7 @@ $options = array(
 	'ocws_wolt_venue_id',
 	'ocws_wolt_merchant_id',
 	'ocws_wolt_webhook_secret',
+	'ocws_wolt_webhook_id',
 	'ocws_wolt_currency',
 	'ocws_wolt_method_id_prefix',
 );

@@ -4,7 +4,7 @@ Tags: woocommerce, shipping, wolt, delivery
 Requires at least: 5.8
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -48,6 +48,12 @@ No. It runs alongside it and reads its data through stable contracts (method ID 
 All options are prefixed `ocws_wolt_*` (e.g. `ocws_wolt_api_key`, `ocws_wolt_venue_id`). The plugin uninstaller cleans them up when WordPress deletes the plugin.
 
 == Changelog ==
+
+= 1.1.0 =
+* One-click "Register webhook with Wolt" button on the Webhook tab — calls `POST /v1/merchants/{merchant_id}/webhooks` for you and stores the returned webhook ID locally. No more manual curl per site.
+* "Unregister" button (`DELETE /v1/merchants/{merchant_id}/webhooks/{id}`) plus a "Re-register" path.
+* Visible registration status (registered / not registered + the Wolt-side webhook id).
+* Defensive `class_exists` guards on every class declaration so legacy stale copies of the Wolt module living inside a host shipping plugin folder can no longer cause a fatal "Cannot declare class" error — the duplicate file is skipped and a diagnostic line is written to error_log identifying its source.
 
 = 1.0.0 =
 * Extracted from the OC Advanced Shipping plugin into a standalone, dependency-free plugin.

@@ -224,3 +224,38 @@
 	border-color: #22c55e;
 	color: #166534;
 }
+
+/* ─── Webhook registration block ───────────────────────────────── */
+
+.ocws-wolt-webhook-reg {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.ocws-wolt-webhook-reg-status {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.ocws-wolt-webhook-id {
+	color: #50575e;
+	font-size: 13px;
+}
+
+.ocws-wolt-webhook-id code {
+	background: #f6f7f7;
+	padding: 2px 8px;
+	border-radius: 3px;
+	border: 1px solid #dcdcde;
+	font-size: 12px;
+}
+
+.ocws-wolt-webhook-reg-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}

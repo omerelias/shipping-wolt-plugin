@@ -77,6 +77,66 @@
 		}
 	} );
 
+	/* ─── Register / Unregister webhook ───────────────────────── */
+
+	function setWebhookMsg( text, cls ) {
+		var $msg = $( '#ocws-wolt-webhook-msg' );
+		$msg.removeClass( 'is-ok is-bad' );
+		if ( cls ) {
+			$msg.addClass( cls );
+		}
+		$msg.text( text || '' );
+	}
+
+	$( '#ocws-wolt-register-webhook' ).on( 'click', function ( e ) {
+		e.preventDefault();
+		var $btn = $( this );
+		setWebhookMsg( OCWSWolt.i18n.registering );
+		$btn.prop( 'disabled', true );
+
+		ajax( 'ocws_wolt_register_webhook' )
+			.done( function ( res ) {
+				if ( res && res.success ) {
+					setWebhookMsg( OCWSWolt.i18n.registerOk, 'is-ok' );
+					setTimeout( function () { window.location.reload(); }, 900 );
+				} else {
+					var err = ( res && res.data && res.data.message ) ? res.data.message : 'Failed';
+					setWebhookMsg( err, 'is-bad' );
+					$btn.prop( 'disabled', false );
+				}
+			} )
+			.fail( function () {
+				setWebhookMsg( 'Request failed.', 'is-bad' );
+				$btn.prop( 'disabled', false );
+			} );
+	} );
+
+	$( '#ocws-wolt-unregister-webhook' ).on( 'click', function ( e ) {
+		e.preventDefault();
+		if ( ! window.confirm( OCWSWolt.i18n.confirmUnreg ) ) {
+			return;
+		}
+		var $btn = $( this );
+		setWebhookMsg( OCWSWolt.i18n.unregistering );
+		$btn.prop( 'disabled', true );
+
+		ajax( 'ocws_wolt_unregister_webhook' )
+			.done( function ( res ) {
+				if ( res && res.success ) {
+					setWebhookMsg( OCWSWolt.i18n.unregisterOk, 'is-ok' );
+					setTimeout( function () { window.location.reload(); }, 700 );
+				} else {
+					var err = ( res && res.data && res.data.message ) ? res.data.message : 'Failed';
+					setWebhookMsg( err, 'is-bad' );
+					$btn.prop( 'disabled', false );
+				}
+			} )
+			.fail( function () {
+				setWebhookMsg( 'Request failed.', 'is-bad' );
+				$btn.prop( 'disabled', false );
+			} );
+	} );
+
 	/* ─── Quote simulator ─────────────────────────────────────── */
 
 	$( '#ocws-wolt-sim-form' ).on( 'submit', function ( e ) {

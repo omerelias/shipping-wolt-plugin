@@ -28,6 +28,7 @@ class OCWS_Wolt_Settings {
 	const OPTION_VENUE_ID           = 'ocws_wolt_venue_id';
 	const OPTION_MERCHANT_ID        = 'ocws_wolt_merchant_id';
 	const OPTION_WEBHOOK_SECRET     = 'ocws_wolt_webhook_secret';
+	const OPTION_WEBHOOK_ID         = 'ocws_wolt_webhook_id';
 	const OPTION_CURRENCY           = 'ocws_wolt_currency';
 	const OPTION_METHOD_ID_PREFIX   = 'ocws_wolt_method_id_prefix';
 
@@ -54,6 +55,7 @@ class OCWS_Wolt_Settings {
 			self::OPTION_VENUE_ID         => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
 			self::OPTION_MERCHANT_ID      => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
 			self::OPTION_WEBHOOK_SECRET   => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
+			self::OPTION_WEBHOOK_ID       => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
 			self::OPTION_CURRENCY         => array( 'sanitize' => array( __CLASS__, 'sanitize_currency' ),     'default' => 'ILS' ),
 			self::OPTION_METHOD_ID_PREFIX => array( 'sanitize' => 'sanitize_text_field',                       'default' => self::DEFAULT_METHOD_ID_PREFIX ),
 		);
@@ -120,6 +122,18 @@ class OCWS_Wolt_Settings {
 
 	public static function get_webhook_secret() {
 		return (string) get_option( self::OPTION_WEBHOOK_SECRET, '' );
+	}
+
+	public static function get_webhook_id() {
+		return trim( (string) get_option( self::OPTION_WEBHOOK_ID, '' ) );
+	}
+
+	public static function set_webhook_id( $id ) {
+		update_option( self::OPTION_WEBHOOK_ID, sanitize_text_field( (string) $id ) );
+	}
+
+	public static function clear_webhook_id() {
+		delete_option( self::OPTION_WEBHOOK_ID );
 	}
 
 	public static function get_currency() {

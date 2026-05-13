@@ -30,9 +30,11 @@ class OCWS_Wolt_Admin {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
 		add_filter( 'plugin_action_links_' . OCWS_WOLT_BASENAME, array( __CLASS__, 'plugin_action_links' ) );
 
-		add_action( 'wp_ajax_ocws_wolt_test_connection', array( __CLASS__, 'ajax_test_connection' ) );
-		add_action( 'wp_ajax_ocws_wolt_generate_secret', array( __CLASS__, 'ajax_generate_secret' ) );
-		add_action( 'wp_ajax_ocws_wolt_simulate', array( __CLASS__, 'ajax_simulate' ) );
+		add_action( 'wp_ajax_ocws_wolt_test_connection',     array( __CLASS__, 'ajax_test_connection' ) );
+		add_action( 'wp_ajax_ocws_wolt_generate_secret',     array( __CLASS__, 'ajax_generate_secret' ) );
+		add_action( 'wp_ajax_ocws_wolt_simulate',            array( __CLASS__, 'ajax_simulate' ) );
+		add_action( 'wp_ajax_ocws_wolt_register_webhook',    array( __CLASS__, 'ajax_register_webhook' ) );
+		add_action( 'wp_ajax_ocws_wolt_unregister_webhook',  array( __CLASS__, 'ajax_unregister_webhook' ) );
 	}
 
 	/**
@@ -95,11 +97,16 @@ class OCWS_Wolt_Admin {
 				'nonce'      => wp_create_nonce( self::NONCE_AJAX ),
 				'webhookUrl' => esc_url_raw( rest_url( 'ocws-wolt/v1/webhook' ) ),
 				'i18n'       => array(
-					'testing'    => __( 'Testing…', 'oc-wolt-drive' ),
-					'connOk'     => __( 'Connected. Wolt returned %d delivery area(s).', 'oc-wolt-drive' ),
-					'connFail'   => __( 'Connection failed.', 'oc-wolt-drive' ),
-					'simRunning' => __( 'Running simulation…', 'oc-wolt-drive' ),
-					'copied'     => __( 'Copied to clipboard.', 'oc-wolt-drive' ),
+					'testing'        => __( 'Testing…', 'oc-wolt-drive' ),
+					'connOk'         => __( 'Connected. Wolt returned %d delivery area(s).', 'oc-wolt-drive' ),
+					'connFail'       => __( 'Connection failed.', 'oc-wolt-drive' ),
+					'simRunning'     => __( 'Running simulation…', 'oc-wolt-drive' ),
+					'copied'         => __( 'Copied to clipboard.', 'oc-wolt-drive' ),
+					'registering'    => __( 'Registering webhook at Wolt…', 'oc-wolt-drive' ),
+					'unregistering'  => __( 'Unregistering webhook…', 'oc-wolt-drive' ),
+					'registerOk'     => __( 'Webhook registered. ID stored. Wolt will start sending events.', 'oc-wolt-drive' ),
+					'unregisterOk'   => __( 'Webhook unregistered.', 'oc-wolt-drive' ),
+					'confirmUnreg'   => __( 'Stop receiving Wolt events for this site? You can re-register at any time.', 'oc-wolt-drive' ),
 				),
 			)
 		);
@@ -389,17 +396,65 @@ class OCWS_Wolt_Admin {
 		</form>
 
 		<div class="ocws-wolt-card">
-			<h2><?php esc_html_e( 'How to register at Wolt', 'oc-wolt-drive' ); ?></h2>
-			<p><?php
+			<h2><?php esc_html_e( 'Registration with Wolt', 'oc-wolt-drive' ); ?></h2>
+			<?php self::render_webhook_registration_block(); ?>
+			<p class="description">
+				<?php
 				printf(
 					wp_kses_post(
 						/* translators: %s: link */
-						__( 'See the official %s for the create-webhook endpoint and accepted event types.', 'oc-wolt-drive' )
+						__( 'Calls %s under the hood. You only need to do this once per merchant.', 'oc-wolt-drive' )
 					),
-					'<a href="https://developer.wolt.com/docs/wolt-drive/webhooks#create-a-webhook" target="_blank" rel="noopener">' . esc_html__( 'Wolt webhook docs', 'oc-wolt-drive' ) . '</a>'
+					'<code>POST /v1/merchants/{merchant_id}/webhooks</code>'
 				);
-			?></p>
-			<p class="description"><?php esc_html_e( 'Wolt currently expects merchants to register webhooks via their merchant tooling rather than a public REST call. Send Wolt the URL and the secret above.', 'oc-wolt-drive' ); ?></p>
+				?>
+				<a href="https://developer.wolt.com/docs/wolt-drive/webhooks#create-a-webhook" target="_blank" rel="noopener"><?php esc_html_e( 'Wolt docs', 'oc-wolt-drive' ); ?></a>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the registration status block: ID, dot, and primary action button.
+	 */
+	protected static function render_webhook_registration_block() {
+		$webhook_id  = OCWS_Wolt_Settings::get_webhook_id();
+		$has_secret  = '' !== OCWS_Wolt_Settings::get_webhook_secret();
+		$has_creds   = OCWS_Wolt_Api::is_configured() && '' !== OCWS_Wolt_Settings::get_merchant_id();
+		$is_registered = '' !== $webhook_id;
+		?>
+		<div class="ocws-wolt-webhook-reg">
+			<div class="ocws-wolt-webhook-reg-status">
+				<span class="ocws-wolt-status-item <?php echo $is_registered ? 'is-ok' : 'is-warn'; ?>">
+					<span class="dot"></span>
+					<strong>
+						<?php echo $is_registered
+							? esc_html__( 'Registered', 'oc-wolt-drive' )
+							: esc_html__( 'Not registered', 'oc-wolt-drive' ); ?>
+					</strong>
+				</span>
+				<?php if ( $is_registered ) : ?>
+					<span class="ocws-wolt-webhook-id"><?php esc_html_e( 'Wolt webhook ID:', 'oc-wolt-drive' ); ?> <code><?php echo esc_html( $webhook_id ); ?></code></span>
+				<?php endif; ?>
+			</div>
+
+			<div class="ocws-wolt-webhook-reg-actions">
+				<?php if ( $is_registered ) : ?>
+					<button type="button" class="button" id="ocws-wolt-register-webhook"><?php esc_html_e( 'Re-register', 'oc-wolt-drive' ); ?></button>
+					<button type="button" class="button button-link-delete" id="ocws-wolt-unregister-webhook"><?php esc_html_e( 'Unregister', 'oc-wolt-drive' ); ?></button>
+				<?php else : ?>
+					<button type="button" class="button button-primary" id="ocws-wolt-register-webhook" <?php disabled( ! $has_secret || ! $has_creds ); ?>>
+						<?php esc_html_e( 'Register webhook with Wolt', 'oc-wolt-drive' ); ?>
+					</button>
+				<?php endif; ?>
+				<span id="ocws-wolt-webhook-msg" class="ocws-wolt-inline-msg"></span>
+			</div>
+
+			<?php if ( ! $has_secret || ! $has_creds ) : ?>
+				<p class="description ocws-wolt-error">
+					<?php esc_html_e( 'Fill in API URL, API Key, Merchant ID, and a webhook secret before registering.', 'oc-wolt-drive' ); ?>
+				</p>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -608,6 +663,57 @@ class OCWS_Wolt_Admin {
 			$html .= '<p>' . esc_html__( 'No slot provided or invalid format — delivery would be sent as ASAP.', 'oc-wolt-drive' ) . '</p>';
 		}
 		wp_send_json_success( array( 'html' => $html ) );
+	}
+
+	/**
+	 * AJAX: register a webhook at Wolt using the configured URL + secret.
+	 * On success, save the returned webhook id locally.
+	 */
+	public static function ajax_register_webhook() {
+		self::verify_ajax();
+
+		$callback_url = rest_url( 'ocws-wolt/v1/webhook' );
+		$secret       = OCWS_Wolt_Settings::get_webhook_secret();
+
+		if ( '' === $secret ) {
+			wp_send_json_error( array( 'message' => __( 'Generate a webhook secret first.', 'oc-wolt-drive' ) ) );
+		}
+
+		$result = OCWS_Wolt_Api::register_webhook( $callback_url, $secret );
+		if ( empty( $result['success'] ) ) {
+			$err = isset( $result['error'] ) ? $result['error'] : __( 'Unknown error.', 'oc-wolt-drive' );
+			wp_send_json_error( array( 'message' => $err ) );
+		}
+
+		if ( ! empty( $result['id'] ) ) {
+			OCWS_Wolt_Settings::set_webhook_id( $result['id'] );
+		}
+		wp_send_json_success(
+			array(
+				'id'      => isset( $result['id'] ) ? $result['id'] : '',
+				'message' => __( 'Webhook registered.', 'oc-wolt-drive' ),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: delete the registered webhook at Wolt and clear the stored id.
+	 */
+	public static function ajax_unregister_webhook() {
+		self::verify_ajax();
+
+		$webhook_id = OCWS_Wolt_Settings::get_webhook_id();
+		if ( '' === $webhook_id ) {
+			wp_send_json_error( array( 'message' => __( 'No webhook is registered.', 'oc-wolt-drive' ) ) );
+		}
+
+		$result = OCWS_Wolt_Api::delete_webhook( $webhook_id );
+		if ( empty( $result['success'] ) ) {
+			$err = isset( $result['error'] ) ? $result['error'] : __( 'Unknown error.', 'oc-wolt-drive' );
+			wp_send_json_error( array( 'message' => $err ) );
+		}
+		OCWS_Wolt_Settings::clear_webhook_id();
+		wp_send_json_success( array( 'message' => __( 'Webhook unregistered.', 'oc-wolt-drive' ) ) );
 	}
 
 	/**

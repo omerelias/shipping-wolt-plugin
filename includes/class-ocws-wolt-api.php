@@ -215,6 +215,107 @@ class OCWS_Wolt_Api {
 		}
 		return array( 'success' => true, 'areas' => $raw, 'raw' => $raw );
 	}
+
+	/* ─── Webhook management ─────────────────────────────────────── */
+
+	/**
+	 * Build a webhook endpoint URL: {base}/v1/merchants/{merchant_id}/webhooks[/{webhook_id}].
+	 *
+	 * @param string|null $webhook_id Optional webhook id for single-resource endpoints.
+	 * @return string|null
+	 */
+	protected static function webhook_endpoint( $webhook_id = null ) {
+		$base        = self::get_api_url();
+		$merchant_id = OCWS_Wolt_Settings::get_merchant_id();
+		if ( '' === $base || '' === $merchant_id ) {
+			return null;
+		}
+		$path = '/v1/merchants/' . rawurlencode( $merchant_id ) . '/webhooks';
+		if ( $webhook_id ) {
+			$path .= '/' . rawurlencode( $webhook_id );
+		}
+		return $base . $path;
+	}
+
+	/**
+	 * Register a webhook at Wolt. Returns the created resource (including its id).
+	 *
+	 * @param string $callback_url  Public URL Wolt will POST events to.
+	 * @param string $client_secret HS256 signing secret (shared between Wolt and us).
+	 * @param array  $retry_config  Optional override for callback_config.exponential_retry_backoff.
+	 * @return array{ success: bool, id?: string, raw?: array, error?: string }
+	 */
+	public static function register_webhook( $callback_url, $client_secret, $retry_config = array() ) {
+		$endpoint = self::webhook_endpoint();
+		if ( null === $endpoint ) {
+			return array( 'success' => false, 'error' => __( 'Wolt API URL or Merchant ID not configured.', 'oc-wolt-drive' ) );
+		}
+		if ( '' === trim( (string) $callback_url ) || '' === trim( (string) $client_secret ) ) {
+			return array( 'success' => false, 'error' => __( 'callback_url and client_secret are required.', 'oc-wolt-drive' ) );
+		}
+		$body = array(
+			'callback_url'    => $callback_url,
+			'client_secret'   => $client_secret,
+			'disabled'        => false,
+			'callback_config' => array(
+				'exponential_retry_backoff' => array(
+					'exponent_base'   => isset( $retry_config['exponent_base'] )   ? (int) $retry_config['exponent_base']   : 5,
+					'max_retry_count' => isset( $retry_config['max_retry_count'] ) ? (int) $retry_config['max_retry_count'] : 3,
+				),
+			),
+		);
+		$resp = self::request( 'POST', $endpoint, $body, 15 );
+		if ( $resp['error'] && 0 === $resp['code'] ) {
+			return array( 'success' => false, 'error' => $resp['error'] );
+		}
+		$raw = is_array( $resp['body'] ) ? $resp['body'] : array();
+		if ( $resp['code'] < 200 || $resp['code'] >= 300 ) {
+			return array( 'success' => false, 'error' => $resp['error'], 'raw' => $raw );
+		}
+		$id = isset( $raw['id'] ) ? (string) $raw['id'] : '';
+		return array( 'success' => true, 'id' => $id, 'raw' => $raw );
+	}
+
+	/**
+	 * Get a single webhook's current configuration (to verify it still exists / is enabled).
+	 *
+	 * @param string $webhook_id Webhook id returned at registration.
+	 * @return array{ success: bool, raw?: array, error?: string }
+	 */
+	public static function get_webhook( $webhook_id ) {
+		$endpoint = self::webhook_endpoint( $webhook_id );
+		if ( null === $endpoint ) {
+			return array( 'success' => false, 'error' => __( 'Wolt API URL or Merchant ID not configured.', 'oc-wolt-drive' ) );
+		}
+		$resp = self::request( 'GET', $endpoint, null, 15 );
+		$raw  = is_array( $resp['body'] ) ? $resp['body'] : array();
+		if ( $resp['code'] < 200 || $resp['code'] >= 300 ) {
+			return array( 'success' => false, 'error' => $resp['error'], 'raw' => $raw );
+		}
+		return array( 'success' => true, 'raw' => $raw );
+	}
+
+	/**
+	 * Delete a webhook at Wolt. Wolt stops sending events after this.
+	 *
+	 * @param string $webhook_id Webhook id returned at registration.
+	 * @return array{ success: bool, error?: string }
+	 */
+	public static function delete_webhook( $webhook_id ) {
+		$endpoint = self::webhook_endpoint( $webhook_id );
+		if ( null === $endpoint ) {
+			return array( 'success' => false, 'error' => __( 'Wolt API URL or Merchant ID not configured.', 'oc-wolt-drive' ) );
+		}
+		$resp = self::request( 'DELETE', $endpoint, null, 15 );
+		if ( $resp['error'] && 0 === $resp['code'] ) {
+			return array( 'success' => false, 'error' => $resp['error'] );
+		}
+		// 204 No Content is the documented success response; treat 404 (already gone) as success too.
+		if ( 204 === $resp['code'] || 200 === $resp['code'] || 404 === $resp['code'] ) {
+			return array( 'success' => true );
+		}
+		return array( 'success' => false, 'error' => $resp['error'] );
+	}
 }
 
 endif;
