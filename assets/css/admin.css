@@ -225,6 +225,304 @@
 	color: #166534;
 }
 
+/* ─── Deliveries dashboard ─────────────────────────────────────── */
+
+.ocws-wolt-deliveries-card {
+	padding: 0;
+	overflow: hidden;
+}
+
+.ocws-wolt-deliveries-header {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	padding: 18px 24px 12px;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.ocws-wolt-deliveries-header h2 {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 16px;
+}
+
+.ocws-wolt-deliveries-count {
+	font-size: 12.5px;
+	color: #50575e;
+	background: #f6f7f7;
+	padding: 3px 10px;
+	border-radius: 999px;
+}
+
+.ocws-wolt-empty {
+	padding: 40px 24px;
+	text-align: center;
+	color: #50575e;
+}
+
+.ocws-wolt-table-wrap {
+	overflow-x: auto;
+}
+
+.ocws-wolt-deliveries {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13.5px;
+}
+
+.ocws-wolt-deliveries thead th {
+	background: #fafafa;
+	color: #1d2327;
+	font-weight: 600;
+	text-align: left;
+	padding: 12px 16px;
+	border-bottom: 1px solid #dcdcde;
+	font-size: 12.5px;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.ocws-wolt-deliveries tbody tr {
+	border-bottom: 1px solid #f0f0f1;
+	transition: background-color 0.15s;
+}
+
+.ocws-wolt-deliveries tbody tr:hover {
+	background: #fbfcfc;
+}
+
+.ocws-wolt-deliveries tbody td {
+	padding: 14px 16px;
+	vertical-align: top;
+}
+
+.ocws-wolt-actions-th {
+	width: 1%;
+	white-space: nowrap;
+}
+
+.ocws-wolt-col-order .ocws-wolt-order-link {
+	font-weight: 600;
+	color: #00aecf;
+	text-decoration: none;
+	font-size: 14px;
+}
+
+.ocws-wolt-col-order .ocws-wolt-order-link:hover {
+	text-decoration: underline;
+}
+
+.ocws-wolt-meta {
+	margin-top: 4px;
+	font-size: 11.5px;
+	color: #8c8f94;
+}
+
+.ocws-wolt-delivery-id code {
+	font-family: Consolas, Monaco, monospace;
+	background: transparent;
+	color: #8c8f94;
+	padding: 0;
+}
+
+.ocws-wolt-customer-name {
+	font-weight: 500;
+	color: #1d2327;
+}
+
+.ocws-wolt-phone {
+	display: inline-block;
+	margin-top: 2px;
+	font-size: 12px;
+	color: #50575e;
+	text-decoration: none;
+	direction: ltr;
+}
+
+.ocws-wolt-phone:hover {
+	color: #00aecf;
+}
+
+.ocws-wolt-col-address {
+	color: #50575e;
+	max-width: 280px;
+	line-height: 1.5;
+}
+
+/* Status pills */
+.ocws-wolt-pill {
+	display: inline-block;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 11.5px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	background: #f0f0f1;
+	color: #50575e;
+}
+
+.ocws-wolt-pill.is-success { background: #dcfce7; color: #166534; }
+.ocws-wolt-pill.is-bad     { background: #fee2e2; color: #991b1b; }
+.ocws-wolt-pill.is-info    { background: #dbeafe; color: #1e40af; }
+.ocws-wolt-pill.is-progress{ background: #fef3c7; color: #92400e; }
+.ocws-wolt-pill.is-neutral { background: #f0f0f1; color: #50575e; }
+
+.ocws-wolt-error-details {
+	margin-top: 6px;
+	font-size: 11.5px;
+}
+
+.ocws-wolt-error-details summary {
+	cursor: pointer;
+	color: #b91c1c;
+}
+
+.ocws-wolt-error-details code {
+	display: block;
+	margin-top: 4px;
+	padding: 6px 8px;
+	background: #fef2f2;
+	border-radius: 4px;
+	max-width: 240px;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font-size: 11px;
+}
+
+.ocws-wolt-col-date {
+	color: #50575e;
+	font-size: 12.5px;
+	white-space: nowrap;
+}
+
+.ocws-wolt-col-actions {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.ocws-wolt-col-actions .button {
+	font-size: 12px;
+	padding: 0 10px;
+	height: 28px;
+	line-height: 26px;
+}
+
+.ocws-wolt-btn-track {
+	background: #00aecf !important;
+	color: #fff !important;
+	border-color: #008faa !important;
+}
+
+.ocws-wolt-btn-track:hover {
+	background: #008faa !important;
+}
+
+/* Pagination */
+.ocws-wolt-pagination {
+	padding: 14px 24px;
+	border-top: 1px solid #f0f0f1;
+}
+
+.ocws-wolt-pagination ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	gap: 6px;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+.ocws-wolt-pagination a,
+.ocws-wolt-pagination span {
+	display: inline-block;
+	min-width: 30px;
+	height: 30px;
+	line-height: 30px;
+	text-align: center;
+	padding: 0 8px;
+	border-radius: 4px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	color: #1d2327;
+	text-decoration: none;
+	font-size: 13px;
+}
+
+.ocws-wolt-pagination a:hover {
+	background: #f0f9fb;
+	border-color: #00aecf;
+	color: #00aecf;
+}
+
+.ocws-wolt-pagination .current {
+	background: #00aecf;
+	color: #fff;
+	border-color: #00aecf;
+}
+
+/* Cancel modal */
+.ocws-wolt-modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.55);
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	animation: ocwsFadeIn 0.15s ease-out;
+}
+
+@keyframes ocwsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.ocws-wolt-modal {
+	background: #fff;
+	border-radius: 12px;
+	padding: 24px;
+	width: 100%;
+	max-width: 420px;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+	animation: ocwsScaleIn 0.15s ease-out;
+}
+
+@keyframes ocwsScaleIn { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.ocws-wolt-modal h3 {
+	margin: 0 0 16px;
+	font-size: 16px;
+	color: #1d2327;
+}
+
+.ocws-wolt-reason-select {
+	width: 100%;
+	height: 38px;
+	padding: 0 10px;
+	border-radius: 6px;
+	border: 1px solid #dcdcde;
+	font-size: 14px;
+}
+
+.ocws-wolt-modal-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 18px;
+}
+
+.ocws-wolt-modal-msg {
+	margin-top: 12px;
+	font-size: 13px;
+	color: #50575e;
+}
+
+.ocws-wolt-modal-msg.is-bad {
+	color: #b91c1c;
+}
+
 /* ─── Webhook registration block ───────────────────────────────── */
 
 .ocws-wolt-webhook-reg {

@@ -304,6 +304,41 @@ class OCWS_Wolt_Api {
 	}
 
 	/**
+	 * Cancel an active Wolt delivery.
+	 *
+	 * Per Wolt docs: PATCH /order/{wolt_order_reference_id}/status/cancel.
+	 * The cancel endpoint is NOT scoped to the venue path. Cancellation
+	 * is only valid until the courier accepts the pickup task — beyond
+	 * that, Wolt returns 4xx and the merchant has to call Wolt support.
+	 *
+	 * @param string $wolt_order_reference_id  Wolt order reference id.
+	 * @param string $reason                   Required cancellation reason.
+	 * @return array{ success: bool, error?: string, raw?: array }
+	 */
+	public static function cancel_delivery( $wolt_order_reference_id, $reason ) {
+		$base = self::get_api_url();
+		if ( '' === $base ) {
+			return array( 'success' => false, 'error' => __( 'Wolt API URL not configured.', 'oc-wolt-drive' ) );
+		}
+		if ( '' === trim( (string) $wolt_order_reference_id ) ) {
+			return array( 'success' => false, 'error' => __( 'Missing wolt_order_reference_id.', 'oc-wolt-drive' ) );
+		}
+		$endpoint = $base . '/order/' . rawurlencode( $wolt_order_reference_id ) . '/status/cancel';
+		$body     = array( 'reason' => (string) $reason );
+		$resp     = self::request( 'PATCH', $endpoint, $body, 15 );
+
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( '[OC Wolt Cancel] HTTP ' . $resp['code'] . ' resp: ' . wp_json_encode( $resp['body'], JSON_UNESCAPED_UNICODE ) );
+		}
+
+		$raw = is_array( $resp['body'] ) ? $resp['body'] : array();
+		if ( $resp['code'] < 200 || $resp['code'] >= 300 ) {
+			return array( 'success' => false, 'error' => $resp['error'], 'raw' => $raw );
+		}
+		return array( 'success' => true, 'raw' => $raw );
+	}
+
+	/**
 	 * Fetch delivery areas (polygons) for the configured merchant.
 	 * Useful for sanity-checking credentials and visualising coverage.
 	 *

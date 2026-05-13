@@ -137,6 +137,68 @@
 			} );
 	} );
 
+	/* ─── Cancel delivery (Deliveries tab) ────────────────────── */
+
+	var CANCEL_REASONS = [
+		{ value: 'customer_request',        label: 'Customer requested' },
+		{ value: 'merchant_out_of_stock',   label: 'Out of stock' },
+		{ value: 'wrong_address',           label: 'Wrong address' },
+		{ value: 'other',                   label: 'Other' }
+	];
+
+	function buildCancelDialog( orderId ) {
+		var $overlay = $( '<div class="ocws-wolt-modal-overlay" />' );
+		var $modal   = $( '<div class="ocws-wolt-modal" />' );
+		var $title   = $( '<h3 />' ).text( OCWSWolt.i18n.confirmCancel );
+		var $select  = $( '<select class="ocws-wolt-reason-select" />' );
+		$select.append( $( '<option />' ).val( '' ).text( '— select reason —' ) );
+		CANCEL_REASONS.forEach( function ( r ) {
+			$select.append( $( '<option />' ).val( r.value ).text( r.label ) );
+		} );
+		var $actions = $( '<div class="ocws-wolt-modal-actions" />' );
+		var $btnNo   = $( '<button type="button" class="button" />' ).text( 'Back' );
+		var $btnYes  = $( '<button type="button" class="button button-primary ocws-wolt-modal-confirm" />' ).text( 'Confirm cancel' );
+		var $msg     = $( '<div class="ocws-wolt-modal-msg" />' );
+		$actions.append( $btnNo, $btnYes );
+		$modal.append( $title, $select, $actions, $msg );
+		$overlay.append( $modal );
+		$( 'body' ).append( $overlay );
+
+		function close() { $overlay.remove(); }
+		$btnNo.on( 'click', close );
+		$overlay.on( 'click', function ( e ) { if ( e.target === $overlay[0] ) { close(); } } );
+
+		$btnYes.on( 'click', function () {
+			var reason = $select.val();
+			if ( ! reason ) {
+				$msg.text( OCWSWolt.i18n.reasonRequired ).addClass( 'is-bad' );
+				return;
+			}
+			$btnYes.prop( 'disabled', true );
+			$msg.removeClass( 'is-bad' ).text( OCWSWolt.i18n.cancelling );
+			ajax( 'ocws_wolt_cancel_delivery', { order_id: orderId, reason: reason } )
+				.done( function ( res ) {
+					if ( res && res.success ) {
+						$msg.text( OCWSWolt.i18n.cancelOk );
+						setTimeout( function () { window.location.reload(); }, 700 );
+					} else {
+						var err = ( res && res.data && res.data.message ) ? res.data.message : 'Failed';
+						$msg.addClass( 'is-bad' ).text( err );
+						$btnYes.prop( 'disabled', false );
+					}
+				} )
+				.fail( function () {
+					$msg.addClass( 'is-bad' ).text( 'Request failed.' );
+					$btnYes.prop( 'disabled', false );
+				} );
+		} );
+	}
+
+	$( document ).on( 'click', '.ocws-wolt-btn-cancel', function ( e ) {
+		e.preventDefault();
+		buildCancelDialog( $( this ).data( 'orderId' ) );
+	} );
+
 	/* ─── Quote simulator ─────────────────────────────────────── */
 
 	$( '#ocws-wolt-sim-form' ).on( 'submit', function ( e ) {

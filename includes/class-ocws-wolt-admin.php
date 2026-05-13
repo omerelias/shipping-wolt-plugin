@@ -35,6 +35,7 @@ class OCWS_Wolt_Admin {
 		add_action( 'wp_ajax_ocws_wolt_simulate',            array( __CLASS__, 'ajax_simulate' ) );
 		add_action( 'wp_ajax_ocws_wolt_register_webhook',    array( __CLASS__, 'ajax_register_webhook' ) );
 		add_action( 'wp_ajax_ocws_wolt_unregister_webhook',  array( __CLASS__, 'ajax_unregister_webhook' ) );
+		add_action( 'wp_ajax_ocws_wolt_cancel_delivery',     array( __CLASS__, 'ajax_cancel_delivery' ) );
 	}
 
 	/**
@@ -106,7 +107,11 @@ class OCWS_Wolt_Admin {
 					'unregistering'  => __( 'Unregistering webhook…', 'oc-wolt-drive' ),
 					'registerOk'     => __( 'Webhook registered. ID stored. Wolt will start sending events.', 'oc-wolt-drive' ),
 					'unregisterOk'   => __( 'Webhook unregistered.', 'oc-wolt-drive' ),
-					'confirmUnreg'   => __( 'Stop receiving Wolt events for this site? You can re-register at any time.', 'oc-wolt-drive' ),
+					'confirmUnreg'    => __( 'Stop receiving Wolt events for this site? You can re-register at any time.', 'oc-wolt-drive' ),
+					'cancelling'      => __( 'Cancelling…', 'oc-wolt-drive' ),
+					'cancelOk'        => __( 'Delivery cancelled.', 'oc-wolt-drive' ),
+					'confirmCancel'   => __( 'Cancel this Wolt delivery? This cannot be undone.', 'oc-wolt-drive' ),
+					'reasonRequired'  => __( 'Please pick a cancellation reason.', 'oc-wolt-drive' ),
 				),
 			)
 		);
@@ -117,7 +122,7 @@ class OCWS_Wolt_Admin {
 	 */
 	protected static function current_tab() {
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'settings'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		return in_array( $tab, array( 'settings', 'webhook', 'tools' ), true ) ? $tab : 'settings';
+		return in_array( $tab, array( 'settings', 'webhook', 'deliveries', 'tools' ), true ) ? $tab : 'settings';
 	}
 
 	/* ─── Page rendering ─────────────────────────────────────────── */
@@ -141,9 +146,10 @@ class OCWS_Wolt_Admin {
 			<nav class="nav-tab-wrapper ocws-wolt-tabs">
 				<?php
 				$tabs = array(
-					'settings' => __( 'Settings', 'oc-wolt-drive' ),
-					'webhook'  => __( 'Webhook', 'oc-wolt-drive' ),
-					'tools'    => __( 'Tools', 'oc-wolt-drive' ),
+					'settings'   => __( 'Settings', 'oc-wolt-drive' ),
+					'deliveries' => __( 'Deliveries', 'oc-wolt-drive' ),
+					'webhook'    => __( 'Webhook', 'oc-wolt-drive' ),
+					'tools'      => __( 'Tools', 'oc-wolt-drive' ),
 				);
 				foreach ( $tabs as $slug => $label ) {
 					$url   = add_query_arg( array( 'page' => self::MENU_SLUG, 'tab' => $slug ), admin_url( 'admin.php' ) );
@@ -157,6 +163,9 @@ class OCWS_Wolt_Admin {
 			switch ( $tab ) {
 				case 'webhook':
 					self::render_webhook_tab();
+					break;
+				case 'deliveries':
+					self::render_deliveries_tab();
 					break;
 				case 'tools':
 					self::render_tools_tab();
@@ -663,6 +672,254 @@ class OCWS_Wolt_Admin {
 			$html .= '<p>' . esc_html__( 'No slot provided or invalid format — delivery would be sent as ASAP.', 'oc-wolt-drive' ) . '</p>';
 		}
 		wp_send_json_success( array( 'html' => $html ) );
+	}
+
+	/* ─── Tab: Deliveries ─────────────────────────────────────────── */
+
+	const DELIVERIES_PER_PAGE = 20;
+
+	/**
+	 * List recent orders that have a Wolt delivery attached.
+	 *
+	 * @param int $paged Current page (1-based).
+	 * @return array{ orders: WC_Order[], total: int, total_pages: int, paged: int }
+	 */
+	protected static function query_deliveries( $paged = 1 ) {
+		$paged = max( 1, (int) $paged );
+		$args  = array(
+			'limit'        => self::DELIVERIES_PER_PAGE,
+			'paged'        => $paged,
+			'orderby'      => 'date',
+			'order'        => 'DESC',
+			'meta_key'     => OCWS_Wolt_Delivery_Trigger::META_DELIVERY_ID,
+			'meta_compare' => 'EXISTS',
+			'paginate'     => true,
+		);
+		$result = wc_get_orders( $args );
+		return array(
+			'orders'      => isset( $result->orders )      ? $result->orders      : array(),
+			'total'       => isset( $result->total )       ? (int) $result->total : 0,
+			'total_pages' => isset( $result->max_num_pages ) ? (int) $result->max_num_pages : 1,
+			'paged'       => $paged,
+		);
+	}
+
+	/**
+	 * Map a Wolt status string to a CSS pill class.
+	 *
+	 * @param string $status Status string from Wolt.
+	 * @return string
+	 */
+	protected static function pill_class_for_status( $status ) {
+		$s = strtoupper( (string) $status );
+		if ( '' === $s )                                          { return 'is-neutral'; }
+		if ( in_array( $s, array( 'DELIVERED', 'COMPLETED' ), true ) )                 { return 'is-success'; }
+		if ( in_array( $s, array( 'CANCELLED', 'REJECTED', 'FAILED' ), true ) )        { return 'is-bad'; }
+		if ( in_array( $s, array( 'INFO_RECEIVED', 'CREATED', 'RECEIVED' ), true ) )   { return 'is-info'; }
+		return 'is-progress';
+	}
+
+	/**
+	 * Render the Deliveries tab: paginated table of every Wolt delivery on the site.
+	 */
+	protected static function render_deliveries_tab() {
+		$paged = isset( $_GET['paged'] ) ? (int) $_GET['paged'] : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$query = self::query_deliveries( $paged );
+		?>
+		<div class="ocws-wolt-card ocws-wolt-deliveries-card">
+			<div class="ocws-wolt-deliveries-header">
+				<h2><?php esc_html_e( 'Wolt deliveries', 'oc-wolt-drive' ); ?></h2>
+				<span class="ocws-wolt-deliveries-count">
+					<?php
+					printf(
+						/* translators: %d: total deliveries */
+						esc_html( _n( '%d delivery', '%d deliveries', $query['total'], 'oc-wolt-drive' ) ),
+						(int) $query['total']
+					);
+					?>
+				</span>
+			</div>
+
+			<?php if ( empty( $query['orders'] ) ) : ?>
+				<div class="ocws-wolt-empty">
+					<p><?php esc_html_e( 'No Wolt deliveries dispatched yet.', 'oc-wolt-drive' ); ?></p>
+					<p class="description"><?php esc_html_e( 'When orders move to the auto-dispatch status (or you click "Create Wolt delivery now" on an order), they will appear here.', 'oc-wolt-drive' ); ?></p>
+				</div>
+			<?php else : ?>
+				<div class="ocws-wolt-table-wrap">
+					<table class="ocws-wolt-deliveries">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Order', 'oc-wolt-drive' ); ?></th>
+								<th><?php esc_html_e( 'Customer', 'oc-wolt-drive' ); ?></th>
+								<th><?php esc_html_e( 'Dropoff address', 'oc-wolt-drive' ); ?></th>
+								<th><?php esc_html_e( 'Status', 'oc-wolt-drive' ); ?></th>
+								<th><?php esc_html_e( 'Created', 'oc-wolt-drive' ); ?></th>
+								<th class="ocws-wolt-actions-th"><?php esc_html_e( 'Actions', 'oc-wolt-drive' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $query['orders'] as $order ) : self::render_delivery_row( $order ); endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+
+				<?php self::render_deliveries_pagination( $query ); ?>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render a single row in the deliveries table.
+	 *
+	 * @param WC_Order $order Order.
+	 */
+	protected static function render_delivery_row( $order ) {
+		$order_id     = $order->get_id();
+		$delivery_id  = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERY_ID );
+		$wolt_ref     = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_ORDER_REF );
+		$wolt_status  = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS );
+		$tracking     = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_TRACKING_URL );
+		$last_error   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_LAST_ERROR );
+
+		$customer_name = trim( $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name() );
+		if ( '' === $customer_name ) {
+			$customer_name = trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() );
+		}
+		$phone = $order->get_meta( '_shipping_phone' );
+		if ( ! $phone ) { $phone = $order->get_billing_phone(); }
+
+		$display_status = $wolt_status ?: ( $last_error ? 'FAILED' : 'CREATED' );
+		$pill_class     = self::pill_class_for_status( $display_status );
+		$can_cancel     = $wolt_ref && ! in_array( strtoupper( (string) $wolt_status ), array( 'DELIVERED', 'CANCELLED', 'FAILED' ), true );
+		?>
+		<tr class="ocws-wolt-row" data-order-id="<?php echo esc_attr( $order_id ); ?>">
+			<td class="ocws-wolt-col-order">
+				<a href="<?php echo esc_url( get_edit_post_link( $order_id ) ); ?>" class="ocws-wolt-order-link">#<?php echo esc_html( $order->get_order_number() ); ?></a>
+				<div class="ocws-wolt-meta">
+					<?php if ( $delivery_id ) : ?>
+						<span class="ocws-wolt-delivery-id" title="Wolt delivery id"><code><?php echo esc_html( substr( $delivery_id, 0, 12 ) ); ?>…</code></span>
+					<?php endif; ?>
+				</div>
+			</td>
+			<td class="ocws-wolt-col-customer">
+				<div class="ocws-wolt-customer-name"><?php echo esc_html( $customer_name ?: '—' ); ?></div>
+				<?php if ( $phone ) : ?>
+					<a href="tel:<?php echo esc_attr( $phone ); ?>" class="ocws-wolt-phone"><?php echo esc_html( $phone ); ?></a>
+				<?php endif; ?>
+			</td>
+			<td class="ocws-wolt-col-address">
+				<?php echo esc_html( $order->get_formatted_shipping_address() ?: $order->get_formatted_billing_address() ); ?>
+			</td>
+			<td class="ocws-wolt-col-status">
+				<span class="ocws-wolt-pill <?php echo esc_attr( $pill_class ); ?>"><?php echo esc_html( $display_status ); ?></span>
+				<?php if ( $last_error ) : ?>
+					<details class="ocws-wolt-error-details">
+						<summary><?php esc_html_e( 'View error', 'oc-wolt-drive' ); ?></summary>
+						<code><?php echo esc_html( $last_error ); ?></code>
+					</details>
+				<?php endif; ?>
+			</td>
+			<td class="ocws-wolt-col-date">
+				<?php echo esc_html( $order->get_date_created() ? $order->get_date_created()->date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) : '—' ); ?>
+			</td>
+			<td class="ocws-wolt-col-actions">
+				<?php if ( $tracking ) : ?>
+					<a href="<?php echo esc_url( $tracking ); ?>" target="_blank" rel="noopener" class="button ocws-wolt-btn-track">
+						<?php esc_html_e( 'Track', 'oc-wolt-drive' ); ?>
+					</a>
+				<?php endif; ?>
+				<a href="<?php echo esc_url( get_edit_post_link( $order_id ) ); ?>" class="button">
+					<?php esc_html_e( 'Order', 'oc-wolt-drive' ); ?>
+				</a>
+				<?php if ( $can_cancel ) : ?>
+					<button type="button" class="button button-link-delete ocws-wolt-btn-cancel"
+						data-order-id="<?php echo esc_attr( $order_id ); ?>"
+						data-wolt-ref="<?php echo esc_attr( $wolt_ref ); ?>">
+						<?php esc_html_e( 'Cancel', 'oc-wolt-drive' ); ?>
+					</button>
+				<?php endif; ?>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Render pagination links below the deliveries table.
+	 *
+	 * @param array $query Output of query_deliveries().
+	 */
+	protected static function render_deliveries_pagination( $query ) {
+		if ( $query['total_pages'] <= 1 ) {
+			return;
+		}
+		$base = add_query_arg(
+			array( 'page' => self::MENU_SLUG, 'tab' => 'deliveries' ),
+			admin_url( 'admin.php' )
+		);
+		$links = paginate_links( array(
+			'base'      => $base . '%_%',
+			'format'    => '&paged=%#%',
+			'current'   => $query['paged'],
+			'total'     => $query['total_pages'],
+			'prev_text' => '&larr;',
+			'next_text' => '&rarr;',
+			'type'      => 'array',
+		) );
+		if ( empty( $links ) ) {
+			return;
+		}
+		echo '<nav class="ocws-wolt-pagination"><ul>';
+		foreach ( $links as $link ) {
+			echo '<li>' . $link . '</li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		}
+		echo '</ul></nav>';
+	}
+
+	/**
+	 * AJAX: cancel a Wolt delivery (PATCH /order/{ref}/status/cancel).
+	 */
+	public static function ajax_cancel_delivery() {
+		self::verify_ajax();
+
+		$order_id = isset( $_POST['order_id'] ) ? (int) $_POST['order_id'] : 0;
+		$reason   = isset( $_POST['reason'] )   ? sanitize_text_field( wp_unslash( $_POST['reason'] ) ) : '';
+
+		if ( $order_id <= 0 || '' === $reason ) {
+			wp_send_json_error( array( 'message' => __( 'Order ID and reason required.', 'oc-wolt-drive' ) ) );
+		}
+		if ( ! current_user_can( 'edit_shop_order', $order_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Forbidden.', 'oc-wolt-drive' ) ), 403 );
+		}
+
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			wp_send_json_error( array( 'message' => __( 'Order not found.', 'oc-wolt-drive' ) ) );
+		}
+
+		$wolt_ref = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_ORDER_REF );
+		if ( '' === $wolt_ref ) {
+			wp_send_json_error( array( 'message' => __( 'Order is missing wolt_order_reference_id — cannot cancel via API.', 'oc-wolt-drive' ) ) );
+		}
+
+		$result = OCWS_Wolt_Api::cancel_delivery( $wolt_ref, $reason );
+		if ( empty( $result['success'] ) ) {
+			$err = isset( $result['error'] ) ? $result['error'] : __( 'Unknown error.', 'oc-wolt-drive' );
+			$order->add_order_note( sprintf( __( 'Wolt: cancel failed — %s', 'oc-wolt-drive' ), $err ) );
+			wp_send_json_error( array( 'message' => $err ) );
+		}
+
+		$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS, 'CANCELLED' );
+		$order->save();
+		$order->add_order_note(
+			sprintf(
+				/* translators: %s: reason */
+				__( 'Wolt: delivery cancelled (reason: %s).', 'oc-wolt-drive' ),
+				$reason
+			)
+		);
+		wp_send_json_success( array( 'message' => __( 'Cancelled.', 'oc-wolt-drive' ) ) );
 	}
 
 	/**
