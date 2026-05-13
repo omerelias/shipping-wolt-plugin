@@ -143,25 +143,85 @@ class OCWS_Wolt_Api {
 	/**
 	 * Build request body for shipment-promises from package destination.
 	 *
+	 * Wolt's API requires either `post_code` OR (`street` AND `city`). Field
+	 * names are exact: `street`, `city`, `post_code` (underscore, not camel,
+	 * not `street_address`/`postal_code` — the docs were misleading).
+	 *
+	 * The OC Advanced Shipping plugin populates the destination with its own
+	 * keys (`street`, `house_num`, `city_name`) from the Google autocomplete
+	 * flow; WC's standard `address` / `address_1` / `city` keys are usually
+	 * empty in that setup, so we try several sources in priority order.
+	 *
 	 * @param array $destination From $package['destination'].
 	 * @return array
 	 */
 	protected static function build_shipment_promise_body( $destination ) {
 		$body = array();
+
 		if ( ! empty( $destination['address_coords']['lat'] ) && ! empty( $destination['address_coords']['lng'] ) ) {
 			$body['location'] = array(
 				'lat' => (float) $destination['address_coords']['lat'],
 				'lng' => (float) $destination['address_coords']['lng'],
 			);
 		}
-		if ( ! empty( $destination['address'] ) ) {
-			$body['address'] = array(
-				'street_address' => $destination['address'],
-				'city'           => isset( $destination['city'] ) ? $destination['city'] : '',
-				'postal_code'    => isset( $destination['postcode'] ) ? $destination['postcode'] : '',
-			);
+
+		$street = self::resolve_street( $destination );
+		$city   = self::resolve_city( $destination );
+		$post   = isset( $destination['postcode'] ) ? trim( (string) $destination['postcode'] ) : '';
+
+		$address = array();
+		if ( '' !== $street ) {
+			$address['street'] = $street;
 		}
+		if ( '' !== $city ) {
+			$address['city'] = $city;
+		}
+		if ( '' !== $post ) {
+			$address['post_code'] = $post;
+		}
+		if ( ! empty( $address ) ) {
+			$body['address'] = $address;
+		}
+
 		return $body;
+	}
+
+	/**
+	 * Pick the best street string from a destination/order address bag.
+	 *
+	 * Priority: OC plugin's `street` + `house_num` → WC `address_1` → WC `address`.
+	 *
+	 * @param array $a Destination or order-derived address array.
+	 * @return string
+	 */
+	public static function resolve_street( $a ) {
+		if ( ! empty( $a['street'] ) ) {
+			$house = isset( $a['house_num'] ) ? trim( (string) $a['house_num'] ) : '';
+			return trim( $a['street'] . ( '' !== $house ? ' ' . $house : '' ) );
+		}
+		if ( ! empty( $a['address_1'] ) ) {
+			return (string) $a['address_1'];
+		}
+		if ( ! empty( $a['address'] ) ) {
+			return (string) $a['address'];
+		}
+		return '';
+	}
+
+	/**
+	 * Pick the best city string. Priority: city_name → city.
+	 *
+	 * @param array $a Destination or order-derived address array.
+	 * @return string
+	 */
+	public static function resolve_city( $a ) {
+		if ( ! empty( $a['city_name'] ) ) {
+			return (string) $a['city_name'];
+		}
+		if ( ! empty( $a['city'] ) ) {
+			return (string) $a['city'];
+		}
+		return '';
 	}
 
 	/**

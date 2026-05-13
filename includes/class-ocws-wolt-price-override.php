@@ -29,6 +29,7 @@ class OCWS_Wolt_Price_Override {
 	 * @param array $package Package being rated.
 	 * @return array
 	 */
+
 	public static function filter_package_rates( $rates, $package ) {
 		if ( ! OCWS_Wolt_Settings::is_enabled() || ! OCWS_Wolt_Api::is_configured() ) {
 			return $rates;
@@ -53,8 +54,13 @@ class OCWS_Wolt_Price_Override {
 
 		$default_price = (float) get_option( 'ocws_default_shipping_price', 0 );
 		$result        = OCWS_Wolt_Api::get_shipment_promise( $destination );
-		$new_cost      = ! empty( $result['success'] ) ? OCWS_Wolt_Settings::apply_markup( (float) $result['cost'] ) : $default_price;
-		$new_cost      = round( $new_cost, wc_get_price_decimals() );
+
+		if ( empty( $result['success'] ) && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( '[OC Wolt] shipment-promises failed: ' . ( isset( $result['error'] ) ? $result['error'] : 'unknown' ) );
+		}
+
+		$new_cost = ! empty( $result['success'] ) ? OCWS_Wolt_Settings::apply_markup( (float) $result['cost'] ) : $default_price;
+		$new_cost = round( $new_cost, wc_get_price_decimals() );
 
 		foreach ( $rates as $rate_id => $rate ) {
 			if ( $rate instanceof WC_Shipping_Rate && 0 === strpos( $rate_id, $prefix ) ) {

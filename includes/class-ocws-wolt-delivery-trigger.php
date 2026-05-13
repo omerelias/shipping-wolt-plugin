@@ -124,9 +124,7 @@ class OCWS_Wolt_Delivery_Trigger {
 		}
 
 		$dropoff = array(
-			'location' => array(
-				'formatted_address' => $order->get_formatted_shipping_address(),
-			),
+			'location' => self::build_dropoff_location( $order ),
 		);
 		$comments = self::build_dropoff_comments( $order );
 		if ( '' !== $comments ) {
@@ -154,6 +152,71 @@ class OCWS_Wolt_Delivery_Trigger {
 			$payload['scheduled_dropoff_time'] = $scheduled;
 		}
 		return $payload;
+	}
+
+	/**
+	 * Build the structured dropoff.location object Wolt expects.
+	 *
+	 * Reads the OC Advanced Shipping custom fields (_billing_street /
+	 * _billing_house_num / _billing_city_name) the host plugin stores on
+	 * the order, with WC's standard shipping address as fallback. Includes
+	 * lat/lng if a coords meta is present.
+	 *
+	 * @param WC_Order $order Order.
+	 * @return array
+	 */
+	protected static function build_dropoff_location( $order ) {
+		$order_id = $order->get_id();
+
+		// Pull the OC plugin's custom fields first (they have the real values).
+		$street_name = get_post_meta( $order_id, '_shipping_street',   true );
+		if ( ! $street_name ) { $street_name = get_post_meta( $order_id, '_billing_street', true ); }
+		$house_num   = get_post_meta( $order_id, '_shipping_house_num', true );
+		if ( ! $house_num )   { $house_num   = get_post_meta( $order_id, '_billing_house_num', true ); }
+		$city_name   = get_post_meta( $order_id, '_shipping_city_name', true );
+		if ( ! $city_name )   { $city_name   = get_post_meta( $order_id, '_billing_city_name', true ); }
+		$coords      = get_post_meta( $order_id, '_shipping_address_coords', true );
+		if ( ! $coords )      { $coords      = get_post_meta( $order_id, '_billing_address_coords', true ); }
+
+		$bag = array(
+			'street'    => $street_name ?: '',
+			'house_num' => $house_num   ?: '',
+			'city_name' => $city_name   ?: '',
+			'city'      => $order->get_shipping_city(),
+			'address_1' => $order->get_shipping_address_1(),
+		);
+
+		$street = OCWS_Wolt_Api::resolve_street( $bag );
+		$city   = OCWS_Wolt_Api::resolve_city( $bag );
+		$post   = $order->get_shipping_postcode();
+
+		$location = array();
+		if ( '' !== $street || '' !== $city ) {
+			$location['street']    = $street;
+			$location['city']      = $city;
+			$location['country']   = $order->get_shipping_country();
+		}
+		if ( '' !== $post ) {
+			$location['post_code'] = $post;
+		}
+
+		// Optional lat/lng if the host plugin saved it.
+		if ( is_array( $coords ) && ! empty( $coords['lat'] ) && ! empty( $coords['lng'] ) ) {
+			$location['lat'] = (float) $coords['lat'];
+			$location['lng'] = (float) $coords['lng'];
+		} elseif ( is_string( $coords ) && '' !== $coords ) {
+			$decoded = json_decode( $coords, true );
+			if ( is_array( $decoded ) && ! empty( $decoded['lat'] ) && ! empty( $decoded['lng'] ) ) {
+				$location['lat'] = (float) $decoded['lat'];
+				$location['lng'] = (float) $decoded['lng'];
+			}
+		}
+
+		// Last-ditch fallback so we never send an empty location.
+		if ( empty( $location ) ) {
+			$location['formatted_address'] = $order->get_formatted_shipping_address();
+		}
+		return $location;
 	}
 
 	/**
