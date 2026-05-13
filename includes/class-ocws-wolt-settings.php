@@ -33,17 +33,26 @@ class OCWS_Wolt_Settings {
 	const OPTION_METHOD_ID_PREFIX   = 'ocws_wolt_method_id_prefix';
 
 	const SETTINGS_GROUP            = 'ocws_wolt_settings';
+	const SETTINGS_GROUP_WEBHOOK    = 'ocws_wolt_webhook_settings';
 
 	const DEFAULT_SANDBOX_URL       = 'https://daas-public-api.development.dev.woltapi.com';
 	const DEFAULT_PRODUCTION_URL    = 'https://daas-public-api.wolt.com';
 	const DEFAULT_METHOD_ID_PREFIX  = 'oc_woo_advanced_shipping_method';
 
 	/**
-	 * Register every option in our group so options.php POSTs save cleanly
-	 * and register_setting sanitisation runs.
+	 * Register every option with its sanitiser. Options are split across two
+	 * settings groups so each form on the admin page can save independently:
+	 *
+	 * - SETTINGS_GROUP         → general settings tab (12 fields)
+	 * - SETTINGS_GROUP_WEBHOOK → webhook tab (secret only)
+	 *
+	 * WEBHOOK_ID is not registered in any group: it is written exclusively
+	 * via our AJAX handlers (register / unregister webhook), and registering
+	 * it in any group would cause options.php to nuke it on every save of
+	 * the OTHER form.
 	 */
 	public static function register_options() {
-		$schema = array(
+		$main_schema = array(
 			self::OPTION_ENABLED          => array( 'sanitize' => array( __CLASS__, 'sanitize_bool' ),         'default' => '' ),
 			self::OPTION_TRIGGER_STATUS   => array( 'sanitize' => 'sanitize_key',                              'default' => 'wc-processing' ),
 			self::OPTION_DISPATCH_OFFSET  => array( 'sanitize' => 'absint',                                    'default' => '30' ),
@@ -54,12 +63,10 @@ class OCWS_Wolt_Settings {
 			self::OPTION_PICKUP_ADDRESS   => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
 			self::OPTION_VENUE_ID         => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
 			self::OPTION_MERCHANT_ID      => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
-			self::OPTION_WEBHOOK_SECRET   => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
-			self::OPTION_WEBHOOK_ID       => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
 			self::OPTION_CURRENCY         => array( 'sanitize' => array( __CLASS__, 'sanitize_currency' ),     'default' => 'ILS' ),
 			self::OPTION_METHOD_ID_PREFIX => array( 'sanitize' => 'sanitize_text_field',                       'default' => self::DEFAULT_METHOD_ID_PREFIX ),
 		);
-		foreach ( $schema as $option => $spec ) {
+		foreach ( $main_schema as $option => $spec ) {
 			register_setting(
 				self::SETTINGS_GROUP,
 				$option,
@@ -69,6 +76,15 @@ class OCWS_Wolt_Settings {
 				)
 			);
 		}
+
+		register_setting(
+			self::SETTINGS_GROUP_WEBHOOK,
+			self::OPTION_WEBHOOK_SECRET,
+			array(
+				'sanitize_callback' => 'sanitize_text_field',
+				'default'           => '',
+			)
+		);
 	}
 
 	/* ─── Sanitisers ──────────────────────────────────────────────── */

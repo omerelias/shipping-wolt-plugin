@@ -368,7 +368,7 @@ class OCWS_Wolt_Admin {
 		</div>
 
 		<form method="post" action="options.php" class="ocws-wolt-form">
-			<?php settings_fields( OCWS_Wolt_Settings::SETTINGS_GROUP ); ?>
+			<?php settings_fields( OCWS_Wolt_Settings::SETTINGS_GROUP_WEBHOOK ); ?>
 			<div class="ocws-wolt-card">
 				<h2><?php esc_html_e( 'Shared secret (HS256)', 'oc-wolt-drive' ); ?></h2>
 				<p class="description">
