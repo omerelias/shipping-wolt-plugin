@@ -14,6 +14,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class OCWS_Wolt_Admin
  */
+if ( ! class_exists( 'OCWS_Wolt_Admin' ) ) :
 class OCWS_Wolt_Admin {
 
 	const MENU_SLUG  = 'oc-wolt-drive';
@@ -635,3 +636,5 @@ class OCWS_Wolt_Admin {
 		return $date->format( DateTimeInterface::ATOM );
 	}
 }
+
+endif;

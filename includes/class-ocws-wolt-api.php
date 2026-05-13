@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class OCWS_Wolt_Api
  */
+if ( ! class_exists( 'OCWS_Wolt_Api' ) ) :
 class OCWS_Wolt_Api {
 
 	const OPTION_API_URL   = 'ocws_wolt_api_url';
@@ -215,3 +216,5 @@ class OCWS_Wolt_Api {
 		return array( 'success' => true, 'areas' => $raw, 'raw' => $raw );
 	}
 }
+
+endif;

@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class OCWS_Wolt_Price_Override
  */
+if ( ! class_exists( 'OCWS_Wolt_Price_Override' ) ) :
 class OCWS_Wolt_Price_Override {
 
 	/**
@@ -63,3 +64,5 @@ class OCWS_Wolt_Price_Override {
 		return $rates;
 	}
 }
+
+endif;

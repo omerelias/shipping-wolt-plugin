@@ -14,6 +14,9 @@ defined( 'ABSPATH' ) || exit;
  * delivery dispatch trigger, webhook endpoint, order meta box).
  * The admin settings UI is bootstrapped separately by OCWS_Wolt_Admin.
  */
+
+if ( ! class_exists( 'OCWS_Wolt' ) ) {
+
 class OCWS_Wolt {
 
 	/**
@@ -48,5 +51,22 @@ class OCWS_Wolt {
 		OCWS_Wolt_Delivery_Trigger::init();
 		OCWS_Wolt_Order_Meta_Box::init();
 		OCWS_Wolt_Webhook::init();
+	}
+}
+
+} else {
+	// Diagnostic: another plugin/file already declared OCWS_Wolt. Log where so we can identify the duplicate source.
+	if ( class_exists( 'ReflectionClass' ) ) {
+		try {
+			$ocws_wolt_existing = new ReflectionClass( 'OCWS_Wolt' );
+			error_log( sprintf(
+				'[OC Wolt Drive] Duplicate class OCWS_Wolt — first declared in %s (line %d). Skipping redeclaration in %s. Likely cause: a legacy "Wolt module" still lives inside a host shipping plugin folder, or two bootstrap files in this folder are both active.',
+				$ocws_wolt_existing->getFileName(),
+				$ocws_wolt_existing->getStartLine(),
+				__FILE__
+			) );
+		} catch ( ReflectionException $e ) {
+			error_log( '[OC Wolt Drive] Duplicate class OCWS_Wolt detected but Reflection failed: ' . $e->getMessage() );
+		}
 	}
 }

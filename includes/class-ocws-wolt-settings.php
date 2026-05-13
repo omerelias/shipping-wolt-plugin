@@ -14,6 +14,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class OCWS_Wolt_Settings
  */
+if ( ! class_exists( 'OCWS_Wolt_Settings' ) ) :
 class OCWS_Wolt_Settings {
 
 	const OPTION_ENABLED            = 'ocws_wolt_enabled';
@@ -190,3 +191,4 @@ class OCWS_Wolt_Settings {
 			: $cost + $value;
 	}
 }
+endif;

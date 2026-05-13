@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class OCWS_Wolt_Order_Meta_Box
  */
+if ( ! class_exists( 'OCWS_Wolt_Order_Meta_Box' ) ) :
 class OCWS_Wolt_Order_Meta_Box {
 
 	const ACTION = 'ocws_wolt_create_delivery';
@@ -98,3 +99,5 @@ class OCWS_Wolt_Order_Meta_Box {
 		exit;
 	}
 }
+
+endif;

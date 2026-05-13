@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class OCWS_Wolt_Delivery_Trigger
  */
+if ( ! class_exists( 'OCWS_Wolt_Delivery_Trigger' ) ) :
 class OCWS_Wolt_Delivery_Trigger {
 
 	const META_STATUS    = '_ocws_wolt_status';
@@ -274,3 +275,5 @@ class OCWS_Wolt_Delivery_Trigger {
 		return $date->format( DateTimeInterface::ATOM );
 	}
 }
+
+endif;

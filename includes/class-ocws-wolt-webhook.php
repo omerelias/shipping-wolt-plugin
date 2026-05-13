@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class OCWS_Wolt_Webhook
  */
+if ( ! class_exists( 'OCWS_Wolt_Webhook' ) ) :
 class OCWS_Wolt_Webhook {
 
 	/**
@@ -185,3 +186,5 @@ class OCWS_Wolt_Webhook {
 		return ! empty( $orders ) ? (int) $orders[0] : null;
 	}
 }
+
+endif;
