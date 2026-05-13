@@ -1,0 +1,226 @@
+/* OC Wolt Drive — admin styles */
+
+.ocws-wolt-wrap {
+	max-width: 1100px;
+}
+
+.ocws-wolt-subtitle {
+	margin: 4px 0 16px;
+	color: #50575e;
+	font-size: 13px;
+}
+
+/* ─── Status strip ─────────────────────────────────────────────── */
+
+.ocws-wolt-status {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	padding: 12px 16px;
+	margin: 8px 0 20px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ocws-wolt-status-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	color: #1d2327;
+}
+
+.ocws-wolt-status-item .dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	display: inline-block;
+	background: #ccc;
+	flex-shrink: 0;
+}
+
+.ocws-wolt-status-item.is-ok .dot {
+	background: #22c55e;
+	box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+
+.ocws-wolt-status-item.is-warn .dot {
+	background: #f59e0b;
+	box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+.ocws-wolt-status-item.is-bad .dot {
+	background: #ef4444;
+	box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+/* ─── Tabs ──────────────────────────────────────────────────────── */
+
+.ocws-wolt-tabs {
+	margin-top: 12px;
+}
+
+/* ─── Cards ─────────────────────────────────────────────────────── */
+
+.ocws-wolt-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	padding: 20px 24px;
+	margin: 16px 0;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ocws-wolt-card h2 {
+	margin: 0 0 14px;
+	padding: 0 0 12px;
+	border-bottom: 1px solid #f0f0f1;
+	font-size: 15px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.ocws-wolt-card .form-table th {
+	width: 220px;
+	padding: 14px 10px 14px 0;
+	font-weight: 500;
+}
+
+.ocws-wolt-card .form-table td {
+	padding: 14px 0;
+}
+
+.ocws-wolt-card .description {
+	color: #646970;
+	font-style: normal;
+	margin-top: 6px;
+	font-size: 12.5px;
+	line-height: 1.5;
+}
+
+.ocws-wolt-card input[type="text"],
+.ocws-wolt-card input[type="url"],
+.ocws-wolt-card input[type="password"],
+.ocws-wolt-card input[type="number"],
+.ocws-wolt-card select {
+	max-width: 480px;
+}
+
+.ocws-wolt-card input.code {
+	font-family: Consolas, Monaco, monospace;
+}
+
+/* ─── Switch toggle ─────────────────────────────────────────────── */
+
+.ocws-wolt-switch {
+	position: relative;
+	display: inline-block;
+	width: 44px;
+	height: 24px;
+	vertical-align: middle;
+}
+
+.ocws-wolt-switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.ocws-wolt-switch-slider {
+	position: absolute;
+	cursor: pointer;
+	inset: 0;
+	background-color: #cbd5e1;
+	transition: background-color 0.2s;
+	border-radius: 999px;
+}
+
+.ocws-wolt-switch-slider::before {
+	position: absolute;
+	content: "";
+	height: 18px;
+	width: 18px;
+	left: 3px;
+	top: 3px;
+	background-color: #fff;
+	transition: transform 0.2s;
+	border-radius: 50%;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.ocws-wolt-switch input:checked + .ocws-wolt-switch-slider {
+	background-color: #00aecf; /* Wolt teal */
+}
+
+.ocws-wolt-switch input:checked + .ocws-wolt-switch-slider::before {
+	transform: translateX(20px);
+}
+
+.ocws-wolt-switch input:focus-visible + .ocws-wolt-switch-slider {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+
+/* ─── Inline / result messages ─────────────────────────────────── */
+
+.ocws-wolt-inline-msg {
+	display: inline-block;
+	margin-left: 10px;
+	font-size: 13px;
+	min-height: 18px;
+}
+
+.ocws-wolt-inline-msg.is-ok {
+	color: #16a34a;
+}
+
+.ocws-wolt-inline-msg.is-bad {
+	color: #b91c1c;
+}
+
+.ocws-wolt-result {
+	margin-top: 18px;
+	padding: 16px;
+	background: #f6f7f7;
+	border-left: 4px solid #2271b1;
+	border-radius: 4px;
+	display: none;
+}
+
+.ocws-wolt-result.is-visible {
+	display: block;
+}
+
+.ocws-wolt-result h3 {
+	margin: 12px 0 6px;
+	font-size: 13px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #50575e;
+}
+
+.ocws-wolt-result h3:first-child {
+	margin-top: 0;
+}
+
+.ocws-wolt-result code {
+	background: #fff;
+	padding: 2px 6px;
+	border-radius: 3px;
+	border: 1px solid #dcdcde;
+	font-size: 12px;
+}
+
+.ocws-wolt-error {
+	color: #b91c1c;
+}
+
+/* ─── Copy button visual feedback ──────────────────────────────── */
+
+.ocws-wolt-copy.is-copied {
+	background: #dcfce7;
+	border-color: #22c55e;
+	color: #166534;
+}

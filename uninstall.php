@@ -1,49 +1,31 @@
 <?php
-
 /**
- * Fired when the plugin is uninstalled.
+ * Uninstall handler — runs only when an admin clicks "Delete" on Plugins.
+ * Removes every option this plugin owns. Order meta added by the plugin
+ * (_ocws_wolt_*) is left alone so that historical orders keep their audit trail.
  *
- * When populating this file, consider the following flow
- * of control:
- *
- * - This method should be static
- * - Check if the $_REQUEST content actually is the plugin name
- * - Run an admin referrer check to make sure it goes through authentication
- * - Verify the output of $_GET makes sense
- * - Repeat with other user roles. Best directly by using the links/query string parameters.
- * - Repeat things for multisite. Once for a single site in the network, once sitewide.
- *
- * This file may be updated more in future version of the Boilerplate; however, this is the
- * general skeleton and outline for how the file should work.
- *
- * For more information, see the following discussion:
- * https://github.com/tommcfarlin/WordPress-Plugin-Boilerplate/pull/123#issuecomment-28541913
- *
- * @link       https://originalconcepts.co.il/
- * @since      1.0.0
- *
- * @package    Oc_Woo_Shipping
+ * @package OC_Wolt_Drive
  */
 
-// If uninstall not called from WordPress, then exit.
-if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-	exit;
-}
+defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-global $wpdb, $wp_version;
-
-// Delete options.
-$wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE 'ocws\_%';" );
-
-$tables = array(
-	"{$wpdb->prefix}oc_woo_shipping_locations",
-	"{$wpdb->prefix}oc_woo_shipping_groups",
-	"{$wpdb->prefix}oc_woo_shipping_companies",
+$options = array(
+	'ocws_wolt_enabled',
+	'ocws_wolt_trigger_status',
+	'ocws_wolt_dispatch_offset_minutes',
+	'ocws_wolt_markup_type',
+	'ocws_wolt_markup_value',
+	'ocws_wolt_api_url',
+	'ocws_wolt_api_key',
+	'ocws_wolt_pickup_address',
+	'ocws_wolt_venue_id',
+	'ocws_wolt_merchant_id',
+	'ocws_wolt_webhook_secret',
+	'ocws_wolt_currency',
+	'ocws_wolt_method_id_prefix',
 );
 
-foreach ( $tables as $table ) {
-	$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+foreach ( $options as $option ) {
+	delete_option( $option );
+	delete_site_option( $option ); // belt + braces for multisite.
 }
-
-require_once plugin_dir_path( __FILE__ ) . 'includes/local-pickup/class-ocws-lp-activator.php';
-OCWS_LP_Activator::uninstall();
