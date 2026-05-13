@@ -140,14 +140,25 @@ class OCWS_Wolt_Api {
 			return array( 'success' => false, 'error' => $resp['error'] );
 		}
 		$raw = is_array( $resp['body'] ) ? $resp['body'] : array();
+
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( '[OC Wolt SP] response (HTTP ' . $resp['code'] . '): ' . wp_json_encode( $raw, JSON_UNESCAPED_UNICODE ) );
+		}
+
 		if ( $resp['code'] < 200 || $resp['code'] >= 300 ) {
 			return array( 'success' => false, 'error' => $resp['error'], 'raw' => $raw );
 		}
+
+		// Wolt returns amounts in MINOR currency units (e.g. agorot for ILS,
+		// cents for USD/EUR). Convert to major units. For ILS / USD / EUR /
+		// most currencies that's divide-by-100; for JPY etc. it'd be 1 — we
+		// hard-code 100 because Wolt operate in markets that all use that
+		// factor.
 		$cost = null;
 		if ( isset( $raw['price']['amount'] ) && is_numeric( $raw['price']['amount'] ) ) {
-			$cost = (float) $raw['price']['amount'];
+			$cost = ( (float) $raw['price']['amount'] ) / 100;
 		} elseif ( isset( $raw['amount'] ) && is_numeric( $raw['amount'] ) ) {
-			$cost = (float) $raw['amount'];
+			$cost = ( (float) $raw['amount'] ) / 100;
 		}
 		if ( null === $cost ) {
 			return array( 'success' => false, 'error' => __( 'Invalid shipment promise response.', 'oc-wolt-drive' ), 'raw' => $raw );
