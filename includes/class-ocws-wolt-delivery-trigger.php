@@ -194,25 +194,30 @@ class OCWS_Wolt_Delivery_Trigger {
 		$post    = $order->get_shipping_postcode();
 		$country = $order->get_shipping_country();
 
-		// Wolt's create-delivery validator: "Either 'shipment_promise_id'
-		// or 'dropoff.location.address' must be defined". Build a single
-		// formatted address string and put it in `address`. Helpful
-		// structured fields go alongside.
-		$address_parts = array_filter( array( $street, $city, $post, $country ) );
-		$location      = array(
-			'address' => implode( ', ', $address_parts ),
-		);
+		// Wolt's create-delivery validator wants dropoff.location.address as
+		// a STRUCTURED OBJECT (not a formatted string). The relevant error
+		// is "Input should be a valid dictionary or object to extract
+		// fields from" at body.dropoff.location.address.
+		$address = array();
+		if ( '' !== $street ) {
+			$address['street'] = $street;
+		}
 		if ( '' !== $city ) {
-			$location['city'] = $city;
+			$address['city'] = $city;
 		}
 		if ( '' !== $post ) {
-			$location['post_code'] = $post;
+			$address['post_code'] = $post;
 		}
 		if ( '' !== $country ) {
-			$location['country'] = $country;
+			$address['country'] = $country;
 		}
 
-		// Optional lat/lng if the host plugin saved it.
+		$location = array(
+			'address' => $address,
+		);
+
+		// Optional lat/lng if the host plugin saved them. Place them as
+		// siblings of `address` under `location`.
 		$lat = null;
 		$lng = null;
 		if ( is_array( $coords ) && ! empty( $coords['lat'] ) && ! empty( $coords['lng'] ) ) {
@@ -230,10 +235,6 @@ class OCWS_Wolt_Delivery_Trigger {
 			$location['lng'] = $lng;
 		}
 
-		// Last-ditch: ensure `address` is never empty (use WC's formatted shipping).
-		if ( '' === $location['address'] ) {
-			$location['address'] = $order->get_formatted_shipping_address();
-		}
 		return $location;
 	}
 
