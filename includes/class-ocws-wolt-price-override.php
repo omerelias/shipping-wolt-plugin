@@ -52,14 +52,21 @@ class OCWS_Wolt_Price_Override {
 			return $rates;
 		}
 
-		$default_price = (float) get_option( 'ocws_default_shipping_price', 0 );
-		$result        = OCWS_Wolt_Api::get_shipment_promise( $destination );
+		$result = OCWS_Wolt_Api::get_shipment_promise( $destination );
 
-		if ( empty( $result['success'] ) && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-			error_log( '[OC Wolt] shipment-promises failed: ' . ( isset( $result['error'] ) ? $result['error'] : 'unknown' ) );
+		// On any failure — including the "address not entered yet" early-out —
+		// leave the host shipping plugin's price untouched. The user sees the
+		// fallback price, not a confusing 0. We only override when Wolt
+		// successfully quoted.
+		if ( empty( $result['success'] ) ) {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG
+				&& isset( $result['error'] ) && 'insufficient_address' !== $result['error'] ) {
+				error_log( '[OC Wolt] shipment-promises failed: ' . $result['error'] );
+			}
+			return $rates;
 		}
 
-		$new_cost = ! empty( $result['success'] ) ? OCWS_Wolt_Settings::apply_markup( (float) $result['cost'] ) : $default_price;
+		$new_cost = OCWS_Wolt_Settings::apply_markup( (float) $result['cost'] );
 		$new_cost = round( $new_cost, wc_get_price_decimals() );
 
 		foreach ( $rates as $rate_id => $rate ) {

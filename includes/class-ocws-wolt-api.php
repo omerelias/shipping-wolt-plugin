@@ -120,6 +120,18 @@ class OCWS_Wolt_Api {
 			return array( 'success' => false, 'error' => __( 'Wolt API URL or Venue ID not configured.', 'oc-wolt-drive' ) );
 		}
 		$body = self::build_shipment_promise_body( $destination );
+
+		// Skip the API call when we cannot satisfy Wolt's minimum payload
+		// (Wolt needs post_code OR street+city — sending an empty body
+		// yields "Input should be a valid dictionary" and just spams logs).
+		$has_address = isset( $body['address'] ) && (
+			! empty( $body['address']['post_code'] ) ||
+			( ! empty( $body['address']['street'] ) && ! empty( $body['address']['city'] ) )
+		);
+		if ( ! $has_address ) {
+			return array( 'success' => false, 'error' => 'insufficient_address' );
+		}
+
 		$resp = self::request( 'POST', $endpoint, $body, 15 );
 		if ( $resp['error'] && $resp['code'] === 0 ) {
 			return array( 'success' => false, 'error' => $resp['error'] );
