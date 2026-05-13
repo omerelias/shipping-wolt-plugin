@@ -76,22 +76,38 @@ class OCWS_Wolt_Webhook {
 			return new WP_REST_Response( array( 'ok' => false, 'error' => 'Invalid payload' ), 400 );
 		}
 
-		// Wolt may nest the event data; flatten common shapes.
-		$data = $payload;
+		// Wolt event payload (per docs):
+		//   { dispatched_at, type: "order.received" | "order.picked_up" | …, details: { id, wolt_order_reference_id, merchant_order_reference_id, … } }
+		$details = isset( $payload['details'] ) && is_array( $payload['details'] ) ? $payload['details'] : $payload;
 		if ( isset( $payload['data'] ) && is_array( $payload['data'] ) ) {
-			$data = $payload['data'];
+			$details = $payload['data'];
 		} elseif ( isset( $payload['order'] ) && is_array( $payload['order'] ) ) {
-			$data = $payload['order'];
+			$details = $payload['order'];
 		}
 
-		$delivery_id = $data['delivery_id'] ?? ( $data['id'] ?? ( $payload['delivery_id'] ?? '' ) );
-		$status      = $data['status'] ?? ( $data['courier_status'] ?? ( $payload['event_type'] ?? '' ) );
-		$message     = $data['message'] ?? ( $payload['message'] ?? '' );
+		// Collect every identifier Wolt might send so we can find the order
+		// regardless of which one they use.
+		$wolt_order_ref = $details['wolt_order_reference_id']     ?? '';
+		$delivery_id    = $details['id']                          ?? ( $details['delivery_id'] ?? '' );
+		$merchant_ref   = $details['merchant_order_reference_id'] ?? '';
+		$event_type     = $payload['type']                        ?? ( $details['type'] ?? '' );
+		$status         = $details['status']                      ?? ( $details['courier_status'] ?? $event_type );
+		$message        = $details['message']                     ?? ( $payload['message']       ?? '' );
 
-		if ( ! $delivery_id ) {
-			return new WP_REST_Response( array( 'ok' => false, 'error' => 'Missing delivery_id' ), 400 );
+		$order_id = 0;
+		if ( $wolt_order_ref ) {
+			$order_id = self::find_order_by_meta( '_ocws_wolt_order_reference_id', $wolt_order_ref );
 		}
-		$order_id = self::find_order_by_delivery_id( $delivery_id );
+		if ( ! $order_id && $delivery_id ) {
+			$order_id = self::find_order_by_meta( '_ocws_wolt_delivery_id', $delivery_id );
+		}
+		if ( ! $order_id && $merchant_ref ) {
+			$order = wc_get_order( (int) $merchant_ref );
+			if ( $order ) {
+				$order_id = $order->get_id();
+			}
+		}
+
 		if ( ! $order_id ) {
 			return new WP_REST_Response( array( 'ok' => true, 'note' => 'Order not found' ), 200 );
 		}
@@ -100,15 +116,36 @@ class OCWS_Wolt_Webhook {
 			return new WP_REST_Response( array( 'ok' => true, 'note' => 'Order not found' ), 200 );
 		}
 		$note = sprintf(
-			/* translators: 1: status, 2: message */
-			__( 'Wolt: Courier status changed to %1$s. %2$s', 'oc-wolt-drive' ),
-			$status ?: __( 'N/A', 'oc-wolt-drive' ),
+			/* translators: 1: event type / status, 2: optional message */
+			__( 'Wolt: %1$s. %2$s', 'oc-wolt-drive' ),
+			$event_type ?: ( $status ?: __( 'update', 'oc-wolt-drive' ) ),
 			$message ?: ''
 		);
 		$order->add_order_note( trim( $note ) );
-		$order->update_meta_data( '_ocws_wolt_webhook_status', $status );
+		if ( $status ) {
+			$order->update_meta_data( '_ocws_wolt_wolt_status', $status );
+		}
+		$order->update_meta_data( '_ocws_wolt_last_event_at', current_time( 'mysql' ) );
 		$order->save();
 		return new WP_REST_Response( array( 'ok' => true ), 200 );
+	}
+
+	/**
+	 * Find an order by a single meta key/value pair. Generic helper used
+	 * for both delivery_id and wolt_order_reference_id lookups.
+	 *
+	 * @param string $key   Meta key.
+	 * @param string $value Meta value.
+	 * @return int Order ID or 0.
+	 */
+	protected static function find_order_by_meta( $key, $value ) {
+		$orders = wc_get_orders( array(
+			'limit'      => 1,
+			'meta_key'   => $key,
+			'meta_value' => $value,
+			'return'     => 'ids',
+		) );
+		return ! empty( $orders ) ? (int) $orders[0] : 0;
 	}
 
 	/**

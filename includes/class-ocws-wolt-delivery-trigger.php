@@ -13,10 +13,12 @@ defined( 'ABSPATH' ) || exit;
 if ( ! class_exists( 'OCWS_Wolt_Delivery_Trigger' ) ) :
 class OCWS_Wolt_Delivery_Trigger {
 
-	const META_STATUS    = '_ocws_wolt_status';
-	const META_DELIVERY_ID = '_ocws_wolt_delivery_id';
-	const META_TRACKING_URL = '_ocws_wolt_tracking_url';
-	const META_LAST_ERROR = '_ocws_wolt_last_error';
+	const META_STATUS              = '_ocws_wolt_status';            // our state: created | failed | …
+	const META_DELIVERY_ID         = '_ocws_wolt_delivery_id';       // raw `id` from POST /deliveries
+	const META_WOLT_ORDER_REF      = '_ocws_wolt_order_reference_id';// `wolt_order_reference_id` — webhooks reference this
+	const META_WOLT_STATUS         = '_ocws_wolt_wolt_status';       // Wolt's courier state: INFO_RECEIVED, PICKED_UP, DELIVERED, …
+	const META_TRACKING_URL        = '_ocws_wolt_tracking_url';
+	const META_LAST_ERROR          = '_ocws_wolt_last_error';
 
 	/**
 	 * Register dynamic status hook. WC fires woocommerce_order_status_{slug}
@@ -81,6 +83,12 @@ class OCWS_Wolt_Delivery_Trigger {
 		if ( $result['success'] ) {
 			$order->update_meta_data( self::META_STATUS, 'created' );
 			$order->update_meta_data( self::META_DELIVERY_ID, $result['delivery_id'] );
+			if ( ! empty( $result['wolt_order_reference_id'] ) ) {
+				$order->update_meta_data( self::META_WOLT_ORDER_REF, $result['wolt_order_reference_id'] );
+			}
+			if ( ! empty( $result['wolt_status'] ) ) {
+				$order->update_meta_data( self::META_WOLT_STATUS, $result['wolt_status'] );
+			}
 			if ( ! empty( $result['tracking_url'] ) ) {
 				$order->update_meta_data( self::META_TRACKING_URL, $result['tracking_url'] );
 			}

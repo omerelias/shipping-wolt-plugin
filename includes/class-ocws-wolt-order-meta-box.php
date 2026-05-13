@@ -47,15 +47,19 @@ class OCWS_Wolt_Order_Meta_Box {
 		if ( ! $order ) {
 			return;
 		}
-		$status = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_STATUS );
-		$delivery_id = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERY_ID );
-		$tracking_url = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_TRACKING_URL );
-		$last_error = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_LAST_ERROR );
+		$status        = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_STATUS );
+		$delivery_id   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERY_ID );
+		$wolt_status   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS );
+		$tracking_url  = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_TRACKING_URL );
+		$last_error    = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_LAST_ERROR );
 
 		if ( $status || $delivery_id || $last_error ) {
-			echo '<p><strong>' . esc_html__( 'Status', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $status ?: '-' ) . '</p>';
+			echo '<p><strong>' . esc_html__( 'Internal status', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $status ?: '-' ) . '</p>';
+			if ( $wolt_status ) {
+				echo '<p><strong>' . esc_html__( 'Wolt status', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $wolt_status ) . '</p>';
+			}
 			if ( $delivery_id ) {
-				echo '<p><strong>' . esc_html__( 'Delivery ID', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $delivery_id ) . '</p>';
+				echo '<p><strong>' . esc_html__( 'Delivery ID', 'oc-wolt-drive' ) . ':</strong> <code>' . esc_html( $delivery_id ) . '</code></p>';
 			}
 			if ( $tracking_url ) {
 				echo '<p><strong>' . esc_html__( 'Tracking', 'oc-wolt-drive' ) . ':</strong> <a href="' . esc_url( $tracking_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View tracking', 'oc-wolt-drive' ) . '</a></p>';

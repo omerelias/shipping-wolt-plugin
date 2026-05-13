@@ -274,13 +274,32 @@ class OCWS_Wolt_Api {
 		if ( $resp['code'] < 200 || $resp['code'] >= 300 ) {
 			return array( 'success' => false, 'error' => $resp['error'], 'raw' => $raw );
 		}
-		$delivery_id   = isset( $raw['id'] ) ? $raw['id'] : ( isset( $raw['delivery_id'] ) ? $raw['delivery_id'] : '' );
-		$tracking_url  = isset( $raw['tracking_url'] ) ? $raw['tracking_url'] : ( isset( $raw['tracking_link'] ) ? $raw['tracking_link'] : '' );
+		// Field paths in the real Wolt response:
+		//   id                        → our internal META_DELIVERY_ID
+		//   wolt_order_reference_id   → the value future webhook events
+		//                               reference; needed for lookup
+		//   status                    → Wolt's own delivery state
+		//                               (INFO_RECEIVED, PICKED_UP, …)
+		//   tracking.url              → public tracking page link
+		$delivery_id    = isset( $raw['id'] ) ? (string) $raw['id'] : ( isset( $raw['delivery_id'] ) ? (string) $raw['delivery_id'] : '' );
+		$wolt_order_ref = isset( $raw['wolt_order_reference_id'] ) ? (string) $raw['wolt_order_reference_id'] : '';
+		$wolt_status    = isset( $raw['status'] ) ? (string) $raw['status'] : '';
+		$tracking_url   = '';
+		if ( isset( $raw['tracking']['url'] ) ) {
+			$tracking_url = (string) $raw['tracking']['url'];
+		} elseif ( isset( $raw['tracking_url'] ) ) {
+			$tracking_url = (string) $raw['tracking_url'];
+		} elseif ( isset( $raw['tracking_link'] ) ) {
+			$tracking_url = (string) $raw['tracking_link'];
+		}
+
 		return array(
-			'success'      => true,
-			'delivery_id'  => $delivery_id,
-			'tracking_url' => $tracking_url,
-			'raw'          => $raw,
+			'success'                 => true,
+			'delivery_id'             => $delivery_id,
+			'wolt_order_reference_id' => $wolt_order_ref,
+			'wolt_status'             => $wolt_status,
+			'tracking_url'            => $tracking_url,
+			'raw'                     => $raw,
 		);
 	}
 
