@@ -121,8 +121,8 @@ class OCWS_Wolt_Admin {
 	 * Resolve the current tab from the query string.
 	 */
 	protected static function current_tab() {
-		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'settings'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		return in_array( $tab, array( 'settings', 'webhook', 'deliveries', 'tools' ), true ) ? $tab : 'settings';
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'deliveries'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		return in_array( $tab, array( 'deliveries', 'settings', 'webhook', 'tools' ), true ) ? $tab : 'deliveries';
 	}
 
 	/* ─── Page rendering ─────────────────────────────────────────── */
@@ -143,18 +143,20 @@ class OCWS_Wolt_Admin {
 
 			<?php self::render_status_strip( $host_active ); ?>
 
-			<nav class="nav-tab-wrapper ocws-wolt-tabs">
+			<nav class="ocws-wolt-tabs" role="tablist" aria-label="<?php esc_attr_e( 'Wolt sections', 'oc-wolt-drive' ); ?>">
 				<?php
 				$tabs = array(
-					'settings'   => __( 'Settings', 'oc-wolt-drive' ),
 					'deliveries' => __( 'Deliveries', 'oc-wolt-drive' ),
+					'settings'   => __( 'Settings', 'oc-wolt-drive' ),
 					'webhook'    => __( 'Webhook', 'oc-wolt-drive' ),
 					'tools'      => __( 'Tools', 'oc-wolt-drive' ),
 				);
 				foreach ( $tabs as $slug => $label ) {
-					$url   = add_query_arg( array( 'page' => self::MENU_SLUG, 'tab' => $slug ), admin_url( 'admin.php' ) );
-					$class = 'nav-tab' . ( $tab === $slug ? ' nav-tab-active' : '' );
-					echo '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $class ) . '">' . esc_html( $label ) . '</a>';
+					$url      = add_query_arg( array( 'page' => self::MENU_SLUG, 'tab' => $slug ), admin_url( 'admin.php' ) );
+					$active   = $tab === $slug;
+					$class    = 'ocws-wolt-tab' . ( $active ? ' is-active' : '' );
+					$selected = $active ? ' aria-current="page"' : '';
+					echo '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $class ) . '" role="tab"' . $selected . '>' . esc_html( $label ) . '</a>';
 				}
 				?>
 			</nav>
