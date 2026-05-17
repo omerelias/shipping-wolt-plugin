@@ -244,6 +244,8 @@ class OCWS_Wolt_Delivery_Trigger {
 		if ( $scheduled ) {
 			$payload['scheduled_dropoff_time'] = $scheduled;
 		}
+        var_dump($payload);
+        die;
 		return $payload;
 	}
 
