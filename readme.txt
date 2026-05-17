@@ -50,15 +50,32 @@ All options are prefixed `ocws_wolt_*` (e.g. `ocws_wolt_api_key`, `ocws_wolt_ven
 == Translation ==
 
 All translatable strings live under the `oc-wolt-drive` text domain.
-To refresh the POT file after touching code, run:
+Translations live in `languages/`:
 
-    bash bin/make-pot.sh        # Linux / macOS / Git Bash on Windows
-    bin\make-pot.bat            # Windows cmd
+  - `oc-wolt-drive.pot`            — master template (no translations)
+  - `oc-wolt-drive-{locale}.po`    — per-language source with translations
+  - `oc-wolt-drive-{locale}.mo`    — compiled binary that WP actually loads
 
-Both wrappers call `wp i18n make-pot` (WP-CLI) against the current source.
-The output is `languages/oc-wolt-drive.pot`. To start a new language, copy
-the POT to `languages/oc-wolt-drive-{locale}.po`, translate in Poedit,
-and Poedit will compile the matching `.mo` file alongside.
+When you add new strings to the code, refresh the POT and merge into
+every existing translation in one step:
+
+    bash bin/make-pot.sh        # POT + auto-merge .po files (default)
+    bin\make-pot.bat
+
+Add `--no-merge` to regenerate the POT without touching .po files.
+
+The merge step (gettext's `msgmerge`) is non-destructive: existing
+translations are preserved, new strings appear with an empty translation,
+strings that changed in the source are marked "fuzzy" for review, and
+strings deleted from the source are marked "obsolete" rather than removed.
+Open the updated .po in Poedit and save — Poedit will recompile the .mo
+binary alongside automatically.
+
+To start a brand-new language, copy the POT:
+
+    cp languages/oc-wolt-drive.pot languages/oc-wolt-drive-en_GB.po
+
+…and open the new file in Poedit.
 
 == Changelog ==
 

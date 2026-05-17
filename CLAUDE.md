@@ -228,13 +228,22 @@ ONE venue id per site; multi-venue support is a future enhancement.
   `load_plugin_textdomain()`)
 - POT file: `languages/oc-wolt-drive.pot` (~170 strings)
 - Hebrew starter template: `languages/oc-wolt-drive-he_IL.po`
-- **Regenerate the POT** after touching any `__()` / `_e()` / `_n()`:
+- **Regenerate the POT + auto-merge into existing .po** after touching
+  any `__()` / `_e()` / `_n()`:
   ```
-  bash bin/make-pot.sh        # Linux / macOS / Git Bash
-  bin\make-pot.bat            # Windows cmd
+  bash bin/make-pot.sh        # default: regenerate POT + msgmerge .po files
+  bash bin/make-pot.sh --no-merge   # POT only
+  bin\make-pot.bat            # Windows cmd equivalent
   ```
-  Both wrappers shell out to `wp i18n make-pot` (WP-CLI). They auto-find
-  wp-cli.phar at `/c/wp-cli/wp-cli.phar` if `wp` isn't in PATH.
+  Both wrappers shell out to `wp i18n make-pot` (WP-CLI) and then run
+  `msgmerge --update --backup=none` for every `languages/*.po`. They
+  auto-find wp-cli.phar at `/c/wp-cli/wp-cli.phar` if `wp` isn't in
+  PATH, and warn cleanly if msgmerge (gettext) isn't installed.
+- **msgmerge is non-destructive**: existing translations preserved,
+  new strings appear with empty msgstr, changed strings flagged
+  `#, fuzzy` for review, deleted strings marked `#~ ` obsolete.
+- After merging, open the `.po` in Poedit → save → `.mo` is recompiled
+  automatically. Upload both `.po` and `.mo` (WP only reads `.mo`).
 - **Every** sprintf-style translatable string must carry a
   `/* translators: %s: … */` comment immediately above it. WP-CLI's
   make-pot warns about missing comments — keep that list empty.
