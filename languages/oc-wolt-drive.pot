@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-17T10:44:41+02:00\n"
+"POT-Creation-Date: 2026-05-17T12:27:45+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: oc-wolt-drive\n"
@@ -561,49 +561,49 @@ msgstr ""
 msgid "callback_url and client_secret are required."
 msgstr ""
 
-#: includes/class-ocws-wolt-delivery-trigger.php:128
+#: includes/class-ocws-wolt-delivery-trigger.php:129
 msgid "Wolt API not configured."
 msgstr ""
 
-#: includes/class-ocws-wolt-delivery-trigger.php:145
+#: includes/class-ocws-wolt-delivery-trigger.php:147
 msgid "Wolt delivery already exists for this order."
 msgstr ""
 
 #. translators: 1: delivery id, 2: tracking url
-#: includes/class-ocws-wolt-delivery-trigger.php:182
+#: includes/class-ocws-wolt-delivery-trigger.php:184
 msgid "Wolt: Shipment created. Delivery ID: %1$s. Tracking: %2$s"
 msgstr ""
 
-#: includes/class-ocws-wolt-delivery-trigger.php:184
+#: includes/class-ocws-wolt-delivery-trigger.php:186
 msgid "N/A"
 msgstr ""
 
 #. translators: %s: error message
-#: includes/class-ocws-wolt-delivery-trigger.php:194
+#: includes/class-ocws-wolt-delivery-trigger.php:196
 msgid "Wolt: Shipment creation failed. %s"
 msgstr ""
 
 #. translators: %s: WC order number
-#: includes/class-ocws-wolt-delivery-trigger.php:362
+#: includes/class-ocws-wolt-delivery-trigger.php:376
 msgid "Order #%s"
 msgstr ""
 
 #. translators: %s: floor number / label
-#: includes/class-ocws-wolt-delivery-trigger.php:397
+#: includes/class-ocws-wolt-delivery-trigger.php:411
 msgid "Floor: %s"
 msgstr ""
 
 #. translators: %s: apartment number / label
-#: includes/class-ocws-wolt-delivery-trigger.php:401
+#: includes/class-ocws-wolt-delivery-trigger.php:415
 msgid "Apartment: %s"
 msgstr ""
 
 #. translators: %s: building entry / door code
-#: includes/class-ocws-wolt-delivery-trigger.php:405
+#: includes/class-ocws-wolt-delivery-trigger.php:419
 msgid "Door code: %s"
 msgstr ""
 
-#: includes/class-ocws-wolt-delivery-trigger.php:408
+#: includes/class-ocws-wolt-delivery-trigger.php:422
 msgid "Leave at the door"
 msgstr ""
 

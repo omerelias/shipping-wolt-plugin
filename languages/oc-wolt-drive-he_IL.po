@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: OC Wolt Drive 1.3.0\n"
 "Report-Msgid-Bugs-To: https://github.com/omerelias/shipping-wolt-plugin/"
 "issues\n"
-"POT-Creation-Date: 2026-05-17T10:44:41+02:00\n"
+"POT-Creation-Date: 2026-05-17T12:27:45+02:00\n"
 "PO-Revision-Date: 2026-05-17 12:00+0300\n"
 "Last-Translator: Omer Elias\n"
 "Language-Team: Hebrew\n"
@@ -95,8 +95,7 @@ msgstr "רישום ה-webhook בוטל."
 #: includes/class-ocws-wolt-admin.php:111
 msgid ""
 "Stop receiving Wolt events for this site? You can re-register at any time."
-msgstr ""
-"להפסיק לקבל עדכוני וולט באתר זה? אפשר להירשם מחדש בכל עת."
+msgstr "להפסיק לקבל עדכוני וולט באתר זה? אפשר להירשם מחדש בכל עת."
 
 #: includes/class-ocws-wolt-admin.php:112
 msgid "Cancelling…"
@@ -168,8 +167,8 @@ msgid ""
 "Override shipping price with Wolt quote at checkout (falls back to default "
 "if Wolt is unavailable)."
 msgstr ""
-"החלף את מחיר המשלוח בהצעת מחיר של וולט בצ׳קאוט (חוזר לברירת המחדל אם וולט "
-"לא זמינים)."
+"החלף את מחיר המשלוח בהצעת מחיר של וולט בצ׳קאוט (חוזר לברירת המחדל אם וולט לא "
+"זמינים)."
 
 #: includes/class-ocws-wolt-admin.php:237
 msgid "Pickup address (venue)"
@@ -203,8 +202,8 @@ msgid ""
 "Minutes after the chosen slot start at which Wolt should arrive (e.g. 30 = "
 "16:30 if the slot is 16:00–19:00)."
 msgstr ""
-"כמה דקות אחרי תחילת חלון הזמן השליח אמור להגיע (למשל 30 = 16:30 אם החלון "
-"הוא 16:00–19:00)."
+"כמה דקות אחרי תחילת חלון הזמן השליח אמור להגיע (למשל 30 = 16:30 אם החלון הוא "
+"16:00–19:00)."
 
 #: includes/class-ocws-wolt-admin.php:257
 msgid "API connection"
@@ -272,8 +271,7 @@ msgid ""
 "Performs a read-only GET against the configured API URL to confirm "
 "credentials work."
 msgstr ""
-"מבצע קריאת GET לקריאה בלבד מול ה-API URL שהוגדר כדי לוודא שפרטי הגישה "
-"תקינים."
+"מבצע קריאת GET לקריאה בלבד מול ה-API URL שהוגדר כדי לוודא שפרטי הגישה תקינים."
 
 #: includes/class-ocws-wolt-admin.php:309
 msgid "Pricing markup"
@@ -312,8 +310,7 @@ msgstr "תחילית מזהה שיטת המשלוח המארחת"
 msgid ""
 "Shipping method ID prefix to recognise as eligible for Wolt dispatch. "
 "Default: %s"
-msgstr ""
-"תחילית מזהה שיטת משלוח שתזוהה כמתאימה לשליחה דרך וולט. ברירת מחדל: %s"
+msgstr "תחילית מזהה שיטת משלוח שתזוהה כמתאימה לשליחה דרך וולט. ברירת מחדל: %s"
 
 #: includes/class-ocws-wolt-admin.php:368
 msgid "Webhook endpoint"
@@ -415,8 +412,7 @@ msgstr "רישום webhook אצל וולט"
 msgid ""
 "Fill in API URL, API Key, Merchant ID, and a webhook secret before "
 "registering."
-msgstr ""
-"מלא API URL, API Key, Merchant ID ו-secret של webhook לפני הרישום."
+msgstr "מלא API URL, API Key, Merchant ID ו-secret של webhook לפני הרישום."
 
 #: includes/class-ocws-wolt-admin.php:482
 msgid "Quote simulator"
@@ -622,49 +618,49 @@ msgstr "לא הוגדרו Wolt API URL או Merchant ID."
 msgid "callback_url and client_secret are required."
 msgstr "callback_url ו-client_secret הם שדות חובה."
 
-#: includes/class-ocws-wolt-delivery-trigger.php:128
+#: includes/class-ocws-wolt-delivery-trigger.php:129
 msgid "Wolt API not configured."
 msgstr "Wolt API לא מוגדר."
 
-#: includes/class-ocws-wolt-delivery-trigger.php:145
+#: includes/class-ocws-wolt-delivery-trigger.php:147
 msgid "Wolt delivery already exists for this order."
 msgstr "קיים כבר משלוח Wolt להזמנה הזו."
 
 #. translators: 1: delivery id, 2: tracking url
-#: includes/class-ocws-wolt-delivery-trigger.php:182
+#: includes/class-ocws-wolt-delivery-trigger.php:184
 msgid "Wolt: Shipment created. Delivery ID: %1$s. Tracking: %2$s"
 msgstr "Wolt: נוצר משלוח. מזהה משלוח: %1$s. מעקב: %2$s"
 
-#: includes/class-ocws-wolt-delivery-trigger.php:184
+#: includes/class-ocws-wolt-delivery-trigger.php:186
 msgid "N/A"
 msgstr "לא זמין"
 
 #. translators: %s: error message
-#: includes/class-ocws-wolt-delivery-trigger.php:194
+#: includes/class-ocws-wolt-delivery-trigger.php:196
 msgid "Wolt: Shipment creation failed. %s"
 msgstr "Wolt: יצירת המשלוח נכשלה. %s"
 
 #. translators: %s: WC order number
-#: includes/class-ocws-wolt-delivery-trigger.php:362
+#: includes/class-ocws-wolt-delivery-trigger.php:376
 msgid "Order #%s"
 msgstr "הזמנה #%s"
 
 #. translators: %s: floor number / label
-#: includes/class-ocws-wolt-delivery-trigger.php:397
+#: includes/class-ocws-wolt-delivery-trigger.php:411
 msgid "Floor: %s"
 msgstr "קומה: %s"
 
 #. translators: %s: apartment number / label
-#: includes/class-ocws-wolt-delivery-trigger.php:401
+#: includes/class-ocws-wolt-delivery-trigger.php:415
 msgid "Apartment: %s"
 msgstr "דירה: %s"
 
 #. translators: %s: building entry / door code
-#: includes/class-ocws-wolt-delivery-trigger.php:405
+#: includes/class-ocws-wolt-delivery-trigger.php:419
 msgid "Door code: %s"
 msgstr "קוד דלת: %s"
 
-#: includes/class-ocws-wolt-delivery-trigger.php:408
+#: includes/class-ocws-wolt-delivery-trigger.php:422
 msgid "Leave at the door"
 msgstr "להשאיר ליד הדלת"
 

@@ -113,6 +113,7 @@ class OCWS_Wolt_Delivery_Trigger {
 		if ( ! $order ) {
 			return;
 		}
+
 		self::create_for_order( $order, false );
 	}
 
@@ -129,6 +130,7 @@ class OCWS_Wolt_Delivery_Trigger {
 		}
 		// In auto mode, only act on orders that used the configured host shipping method.
 		if ( ! $manual ) {
+
 			$prefix         = OCWS_Wolt_Settings::get_method_id_prefix();
 			$is_oc_shipping = false;
 			foreach ( $order->get_shipping_methods() as $item ) {
@@ -216,6 +218,8 @@ class OCWS_Wolt_Delivery_Trigger {
 			$phone = $order->get_billing_phone();
 		}
 
+		$email = $order->get_billing_email();
+
 		$dropoff = array(
 			'location' => self::build_dropoff_location( $order ),
 		);
@@ -223,6 +227,19 @@ class OCWS_Wolt_Delivery_Trigger {
 		if ( '' !== $comments ) {
 			$dropoff['comments'] = $comments;
 		}
+
+		// recipient.email is optional; array_filter drops it cleanly when the
+		// order has no billing email so we don't send `"email": ""` / null.
+		$recipient = array_filter(
+			array(
+				'name'         => $name,
+				'phone_number' => $phone,
+				'email'        => $email,
+			),
+			static function ( $v ) {
+				return '' !== $v && null !== $v;
+			}
+		);
 
 		$payload = array(
 			'merchant_order_reference_id' => (string) $order->get_id(),
@@ -233,10 +250,7 @@ class OCWS_Wolt_Delivery_Trigger {
 				),
 			),
 			'dropoff'                     => $dropoff,
-			'recipient'                   => array(
-				'name'         => $name,
-				'phone_number' => $phone,
-			),
+			'recipient'                   => $recipient,
 			'parcels'                     => self::build_parcels( $order ),
 		);
 
@@ -244,8 +258,6 @@ class OCWS_Wolt_Delivery_Trigger {
 		if ( $scheduled ) {
 			$payload['scheduled_dropoff_time'] = $scheduled;
 		}
-        var_dump($payload);
-        die;
 		return $payload;
 	}
 
