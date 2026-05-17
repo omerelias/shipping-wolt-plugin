@@ -3,7 +3,7 @@
  * Plugin Name:       OC Wolt Drive
  * Plugin URI:        https://github.com/omerelias/shipping-wolt-plugin
  * Description:       Wolt Drive courier integration for the OC Advanced Shipping plugin. Adds live pricing at checkout, automatic + manual delivery dispatch to Wolt, JWT-signed status webhooks, and an admin console.
- * Version:           1.2.0
+ * Version:           1.3.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Omer Elias
@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 /* ─── Constants ────────────────────────────────────────────────────────── */
 
-define( 'OCWS_WOLT_VERSION', '1.2.0' );
+define( 'OCWS_WOLT_VERSION', '1.3.0' );
 define( 'OCWS_WOLT_FILE', __FILE__ );
 define( 'OCWS_WOLT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OCWS_WOLT_URL', plugin_dir_url( __FILE__ ) );
@@ -68,6 +68,44 @@ function ocws_wolt_bootstrap() {
 	OCWS_Wolt_Admin::init();
 }
 add_action( 'plugins_loaded', 'ocws_wolt_bootstrap', 20 );
+
+/**
+ * Declare compatibility with WooCommerce High-Performance Order Storage.
+ *
+ * This plugin reads/writes order meta exclusively through $order->get_meta()
+ * / update_meta_data() / save() (no get_post_meta on order IDs), and uses
+ * wc_get_orders() for listing — both work transparently against the new
+ * wc_orders table.
+ */
+add_action(
+	'before_woocommerce_init',
+	function () {
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+				'custom_order_tables',
+				OCWS_WOLT_FILE,
+				true
+			);
+		}
+	}
+);
+
+/**
+ * Build the admin URL for editing a WooCommerce order, honouring HPOS.
+ *
+ * @param int $order_id Order ID.
+ * @return string URL or empty string when no id given.
+ */
+function ocws_wolt_order_edit_url( $order_id ) {
+	$order_id = absint( $order_id );
+	if ( ! $order_id ) {
+		return '';
+	}
+	if ( 'yes' === get_option( 'woocommerce_custom_orders_table_enabled' ) ) {
+		return admin_url( 'admin.php?page=wc-orders&action=edit&id=' . $order_id );
+	}
+	return get_edit_post_link( $order_id, '' );
+}
 
 /**
  * Detect whether the host OC Advanced Shipping plugin is active.

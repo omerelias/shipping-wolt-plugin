@@ -172,16 +172,21 @@ Wolt expect minor here too.
 - We store both as separate meta keys and try `wolt_order_reference_id`
   first when matching events to orders
 
-### Auto-dispatch hook needs the slug without `wc-` prefix
-`wc_get_order_statuses()` returns `wc-pending`, `wc-processing` etc.
-WC fires `woocommerce_order_status_pending`, `..._processing` — without
-the prefix. `OCWS_Wolt_Delivery_Trigger::init()` strips `wc-` before
-attaching the action. Without that fix the auto path never fires.
+### Auto-dispatch must listen to TWO events, not one
+WC fires `woocommerce_order_status_{slug}` only on a status TRANSITION.
+Brand-new orders that are CREATED already in the trigger status
+(typical for `pending` / COD) never see a transition. As of v1.3.0
+the trigger subscribes to both `woocommerce_order_status_changed`
+(every transition) and `woocommerce_new_order` (initial creation),
+filtering by the configured trigger status. `create_for_order()` is
+idempotent (META_DELIVERY_ID short-circuit) so the double subscription
+is safe. Don't go back to a single-slug hook.
 
-### Auto-dispatch on `pending` is a poor default choice
-WC creates orders in `pending` state. There's no transition INTO
-pending → no `woocommerce_order_status_pending` action fires. Use
-`processing` (the state after successful payment) instead.
+### Trigger-status comparisons must strip `wc-`
+`wc_get_order_statuses()` returns `wc-pending`/`wc-processing`. WC's
+status-changed callbacks pass the slug WITHOUT the prefix. Use
+`status_matches_trigger()` on the trigger class — it strips `wc-` from
+both sides before comparing.
 
 ### Endpoint URL patterns
 | Purpose | Path | Notes |
@@ -215,6 +220,41 @@ rep's note) for its venue id when needed. The plugin currently supports
 ONE venue id per site; multi-venue support is a future enhancement.
 
 ---
+
+## i18n / translations
+
+- Text domain: `oc-wolt-drive`
+- Domain path: `/languages` (loaded in `ocws_wolt_bootstrap()` via
+  `load_plugin_textdomain()`)
+- POT file: `languages/oc-wolt-drive.pot` (~170 strings)
+- Hebrew starter template: `languages/oc-wolt-drive-he_IL.po`
+- **Regenerate the POT** after touching any `__()` / `_e()` / `_n()`:
+  ```
+  bash bin/make-pot.sh        # Linux / macOS / Git Bash
+  bin\make-pot.bat            # Windows cmd
+  ```
+  Both wrappers shell out to `wp i18n make-pot` (WP-CLI). They auto-find
+  wp-cli.phar at `/c/wp-cli/wp-cli.phar` if `wp` isn't in PATH.
+- **Every** sprintf-style translatable string must carry a
+  `/* translators: %s: … */` comment immediately above it. WP-CLI's
+  make-pot warns about missing comments — keep that list empty.
+
+## HPOS (High-Performance Order Storage)
+
+The plugin declares compatibility in the bootstrap via
+`FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true )`.
+Rules of thumb so this stays true:
+
+- **Never use `get_post_meta` / `update_post_meta` on an order ID.** Use
+  `$order->get_meta()` / `$order->update_meta_data()` / `$order->save()`.
+- **Edit links**: use `ocws_wolt_order_edit_url( $order_id )` (defined in
+  the bootstrap) — returns the HPOS URL when HPOS is on, the legacy
+  `post.php` URL otherwise.
+- **Meta boxes**: register against `wc_get_page_screen_id( 'shop-order' )`,
+  not the literal `'shop_order'` post type. Render callbacks must accept
+  either a `WP_Post` (legacy) or a `WC_Order` (HPOS).
+- **Order queries**: `wc_get_orders()` works under HPOS transparently;
+  don't drop down to `WP_Query` / `$wpdb` for orders.
 
 ## File structure
 

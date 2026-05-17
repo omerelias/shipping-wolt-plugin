@@ -24,26 +24,37 @@ class OCWS_Wolt_Order_Meta_Box {
 	}
 
 	/**
-	 * Add Wolt Info meta box.
+	 * Add the Wolt meta box. Uses wc_get_page_screen_id( 'shop-order' ) so the
+	 * box lands on the right screen under both legacy `post.php` and HPOS
+	 * `admin.php?page=wc-orders` setups.
 	 */
 	public static function add_meta_box() {
+		$screen = function_exists( 'wc_get_page_screen_id' )
+			? wc_get_page_screen_id( 'shop-order' )
+			: 'shop_order';
+
 		add_meta_box(
 			'ocws_wolt_info',
 			__( 'Wolt Drive', 'oc-wolt-drive' ),
 			array( __CLASS__, 'render' ),
-			'shop_order',
+			$screen,
 			'side',
 			'default'
 		);
 	}
 
 	/**
-	 * Render meta box content.
+	 * Render meta box content. WP passes a WP_Post under the legacy screen,
+	 * a WC_Order under HPOS — accept both.
 	 *
-	 * @param WP_Post $post Post (order).
+	 * @param WP_Post|WC_Order $post_or_order Post or order, depending on
+	 *                                         which screen we're on.
 	 */
-	public static function render( $post ) {
-		$order = wc_get_order( $post->ID );
+	public static function render( $post_or_order ) {
+		$order = $post_or_order instanceof WC_Order
+			? $post_or_order
+			: wc_get_order( is_object( $post_or_order ) ? $post_or_order->ID : (int) $post_or_order );
+
 		if ( ! $order ) {
 			return;
 		}
@@ -112,7 +123,7 @@ class OCWS_Wolt_Order_Meta_Box {
 		}
 
 		$result   = OCWS_Wolt_Delivery_Trigger::create_for_order( $order, true );
-		$redirect = wp_get_referer() ?: admin_url( 'post.php?post=' . $order_id . '&action=edit' );
+		$redirect = wp_get_referer() ?: ocws_wolt_order_edit_url( $order_id );
 		$flag     = ! empty( $result['success'] ) ? 'ocws_wolt_ok' : 'ocws_wolt_err';
 		$redirect = add_query_arg( $flag, '1', $redirect );
 		wp_safe_redirect( $redirect );

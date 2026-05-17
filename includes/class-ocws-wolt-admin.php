@@ -99,6 +99,7 @@ class OCWS_Wolt_Admin {
 				'webhookUrl' => esc_url_raw( rest_url( 'ocws-wolt/v1/webhook' ) ),
 				'i18n'       => array(
 					'testing'        => __( 'Testing…', 'oc-wolt-drive' ),
+					/* translators: %d: number of delivery areas Wolt returned */
 					'connOk'         => __( 'Connected. Wolt returned %d delivery area(s).', 'oc-wolt-drive' ),
 					'connFail'       => __( 'Connection failed.', 'oc-wolt-drive' ),
 					'simRunning'     => __( 'Running simulation…', 'oc-wolt-drive' ),
@@ -800,7 +801,7 @@ class OCWS_Wolt_Admin {
 		?>
 		<tr class="ocws-wolt-row" data-order-id="<?php echo esc_attr( $order_id ); ?>">
 			<td class="ocws-wolt-col-order">
-				<a href="<?php echo esc_url( get_edit_post_link( $order_id ) ); ?>" class="ocws-wolt-order-link">#<?php echo esc_html( $order->get_order_number() ); ?></a>
+				<a href="<?php echo esc_url( ocws_wolt_order_edit_url( $order_id ) ); ?>" class="ocws-wolt-order-link">#<?php echo esc_html( $order->get_order_number() ); ?></a>
 				<div class="ocws-wolt-meta">
 					<?php if ( $delivery_id ) : ?>
 						<span class="ocws-wolt-delivery-id" title="Wolt delivery id"><code><?php echo esc_html( substr( $delivery_id, 0, 12 ) ); ?>…</code></span>
@@ -851,7 +852,7 @@ class OCWS_Wolt_Admin {
 						<?php esc_html_e( 'Track', 'oc-wolt-drive' ); ?>
 					</a>
 				<?php endif; ?>
-				<a href="<?php echo esc_url( get_edit_post_link( $order_id ) ); ?>" class="button">
+				<a href="<?php echo esc_url( ocws_wolt_order_edit_url( $order_id ) ); ?>" class="button">
 					<?php esc_html_e( 'Order', 'oc-wolt-drive' ); ?>
 				</a>
 				<?php if ( $can_cancel ) : ?>
@@ -927,7 +928,11 @@ class OCWS_Wolt_Admin {
 		$result = OCWS_Wolt_Api::cancel_delivery( $wolt_ref, $reason );
 		if ( empty( $result['success'] ) ) {
 			$err = isset( $result['error'] ) ? $result['error'] : __( 'Unknown error.', 'oc-wolt-drive' );
-			$order->add_order_note( sprintf( __( 'Wolt: cancel failed — %s', 'oc-wolt-drive' ), $err ) );
+			$order->add_order_note( sprintf(
+				/* translators: %s: error message returned by Wolt */
+				__( 'Wolt: cancel failed — %s', 'oc-wolt-drive' ),
+				$err
+			) );
 			wp_send_json_error( array( 'message' => $err ) );
 		}
 

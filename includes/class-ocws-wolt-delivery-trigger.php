@@ -28,14 +28,73 @@ class OCWS_Wolt_Delivery_Trigger {
 	const META_LAST_ERROR          = '_ocws_wolt_last_error';
 
 	/**
-	 * Register dynamic status hook. WC fires woocommerce_order_status_{slug}
-	 * WITHOUT the `wc-` prefix (`pending`, `processing`, …) — but
-	 * wc_get_order_statuses() returns keys WITH the prefix (`wc-pending`).
-	 * Strip it so the hook actually matches.
+	 * Register order-lifecycle hooks.
+	 *
+	 * Why two hooks instead of `woocommerce_order_status_{slug}`:
+	 *   - WC fires `woocommerce_order_status_{slug}` only on a STATUS
+	 *     TRANSITION. Brand-new orders that are CREATED already in the
+	 *     trigger status (typically `pending` for pay-on-delivery / COD)
+	 *     never see a transition, so a single-slug hook misses them.
+	 *   - `woocommerce_order_status_changed` catches every transition,
+	 *     including ones from "" / "auto-draft" to a real status — but
+	 *     not all WC versions fire this for the very first save.
+	 *   - `woocommerce_new_order` is the only hook guaranteed for every
+	 *     freshly created order regardless of its initial status.
+	 * Listening to both gives us "any order that ENDS UP in the trigger
+	 * status" coverage. `create_for_order()` itself is idempotent
+	 * (META_DELIVERY_ID short-circuit), so being called twice for the
+	 * same order is safe.
 	 */
 	public static function init() {
-		$status = preg_replace( '/^wc-/', '', OCWS_Wolt_Settings::get_trigger_status() );
-		add_action( 'woocommerce_order_status_' . $status, array( __CLASS__, 'on_trigger_status' ), 10, 2 );
+		add_action( 'woocommerce_order_status_changed', array( __CLASS__, 'on_status_changed' ), 10, 4 );
+		add_action( 'woocommerce_new_order',            array( __CLASS__, 'on_new_order' ),       10, 2 );
+	}
+
+	/**
+	 * Hook callback: fired on every WC order status transition.
+	 *
+	 * @param int      $order_id Order ID.
+	 * @param string   $from     Old status (without wc- prefix).
+	 * @param string   $to       New status (without wc- prefix).
+	 * @param WC_Order $order    Order, when WC passes it.
+	 */
+	public static function on_status_changed( $order_id, $from, $to, $order = null ) {
+		if ( ! self::status_matches_trigger( $to ) ) {
+			return;
+		}
+		self::on_trigger_status( $order_id, $order );
+	}
+
+	/**
+	 * Hook callback: fired once per brand-new order.
+	 *
+	 * @param int      $order_id Order ID.
+	 * @param WC_Order $order    Order.
+	 */
+	public static function on_new_order( $order_id, $order = null ) {
+		if ( ! $order instanceof WC_Order ) {
+			$order = wc_get_order( $order_id );
+		}
+		if ( ! $order ) {
+			return;
+		}
+		if ( ! self::status_matches_trigger( $order->get_status() ) ) {
+			return;
+		}
+		self::on_trigger_status( $order_id, $order );
+	}
+
+	/**
+	 * Compare an arbitrary status against the configured trigger, tolerating
+	 * the `wc-` prefix on either side.
+	 *
+	 * @param string $status Status to test.
+	 * @return bool
+	 */
+	protected static function status_matches_trigger( $status ) {
+		$trigger = preg_replace( '/^wc-/', '', (string) OCWS_Wolt_Settings::get_trigger_status() );
+		$current = preg_replace( '/^wc-/', '', (string) $status );
+		return '' !== $current && '' !== $trigger && $current === $trigger;
 	}
 
 	/**
@@ -200,17 +259,17 @@ class OCWS_Wolt_Delivery_Trigger {
 	 * @return array
 	 */
 	protected static function build_dropoff_location( $order ) {
-		$order_id = $order->get_id();
-
 		// Pull the OC plugin's custom fields first (they have the real values).
-		$street_name = get_post_meta( $order_id, '_shipping_street',   true );
-		if ( ! $street_name ) { $street_name = get_post_meta( $order_id, '_billing_street', true ); }
-		$house_num   = get_post_meta( $order_id, '_shipping_house_num', true );
-		if ( ! $house_num )   { $house_num   = get_post_meta( $order_id, '_billing_house_num', true ); }
-		$city_name   = get_post_meta( $order_id, '_shipping_city_name', true );
-		if ( ! $city_name )   { $city_name   = get_post_meta( $order_id, '_billing_city_name', true ); }
-		$coords      = get_post_meta( $order_id, '_shipping_address_coords', true );
-		if ( ! $coords )      { $coords      = get_post_meta( $order_id, '_billing_address_coords', true ); }
+		// Use $order->get_meta() rather than get_post_meta() so this works under
+		// WC's High-Performance Order Storage (custom tables) too.
+		$street_name = $order->get_meta( '_shipping_street' );
+		if ( ! $street_name ) { $street_name = $order->get_meta( '_billing_street' ); }
+		$house_num   = $order->get_meta( '_shipping_house_num' );
+		if ( ! $house_num )   { $house_num   = $order->get_meta( '_billing_house_num' ); }
+		$city_name   = $order->get_meta( '_shipping_city_name' );
+		if ( ! $city_name )   { $city_name   = $order->get_meta( '_billing_city_name' ); }
+		$coords      = $order->get_meta( '_shipping_address_coords' );
+		if ( ! $coords )      { $coords      = $order->get_meta( '_billing_address_coords' ); }
 
 		$bag = array(
 			'street'    => $street_name ?: '',
@@ -299,6 +358,7 @@ class OCWS_Wolt_Delivery_Trigger {
 		}
 		if ( empty( $parcels ) ) {
 			$parcels[] = array(
+				/* translators: %s: WC order number */
 				'description' => sprintf( __( 'Order #%s', 'oc-wolt-drive' ), $order->get_order_number() ),
 				'identifier'  => (string) $order->get_id(),
 				'price'       => array(
@@ -317,32 +377,34 @@ class OCWS_Wolt_Delivery_Trigger {
 	 * @return string
 	 */
 	protected static function build_dropoff_comments( $order ) {
-		$order_id = $order->get_id();
-
-		$floor      = get_post_meta( $order_id, '_shipping_floor', true );
+		// HPOS-safe meta reads via the order object.
+		$floor      = $order->get_meta( '_shipping_floor' );
 		if ( ! $floor ) {
-			$floor = get_post_meta( $order_id, '_billing_floor', true );
+			$floor = $order->get_meta( '_billing_floor' );
 		}
-		$apartment  = get_post_meta( $order_id, '_shipping_apartment', true );
+		$apartment  = $order->get_meta( '_shipping_apartment' );
 		if ( ! $apartment ) {
-			$apartment = get_post_meta( $order_id, '_billing_apartment', true );
+			$apartment = $order->get_meta( '_billing_apartment' );
 		}
-		$enter_code = get_post_meta( $order_id, '_shipping_enter_code', true );
+		$enter_code = $order->get_meta( '_shipping_enter_code' );
 		if ( ! $enter_code ) {
-			$enter_code = get_post_meta( $order_id, '_billing_enter_code', true );
+			$enter_code = $order->get_meta( '_billing_enter_code' );
 		}
 
 		$parts = array();
 		if ( $floor ) {
+			/* translators: %s: floor number / label */
 			$parts[] = sprintf( __( 'Floor: %s', 'oc-wolt-drive' ), $floor );
 		}
 		if ( $apartment ) {
+			/* translators: %s: apartment number / label */
 			$parts[] = sprintf( __( 'Apartment: %s', 'oc-wolt-drive' ), $apartment );
 		}
 		if ( $enter_code ) {
+			/* translators: %s: building entry / door code */
 			$parts[] = sprintf( __( 'Door code: %s', 'oc-wolt-drive' ), $enter_code );
 		}
-		if ( 1 == get_post_meta( $order_id, 'ocws_leave_at_the_door', true ) ) {
+		if ( '1' === (string) $order->get_meta( 'ocws_leave_at_the_door' ) ) {
 			$parts[] = __( 'Leave at the door', 'oc-wolt-drive' );
 		}
 		$note = $order->get_customer_note();

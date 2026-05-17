@@ -4,7 +4,7 @@ Tags: woocommerce, shipping, wolt, delivery
 Requires at least: 5.8
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -47,7 +47,25 @@ No. It runs alongside it and reads its data through stable contracts (method ID 
 
 All options are prefixed `ocws_wolt_*` (e.g. `ocws_wolt_api_key`, `ocws_wolt_venue_id`). The plugin uninstaller cleans them up when WordPress deletes the plugin.
 
+== Translation ==
+
+All translatable strings live under the `oc-wolt-drive` text domain.
+To refresh the POT file after touching code, run:
+
+    bash bin/make-pot.sh        # Linux / macOS / Git Bash on Windows
+    bin\make-pot.bat            # Windows cmd
+
+Both wrappers call `wp i18n make-pot` (WP-CLI) against the current source.
+The output is `languages/oc-wolt-drive.pot`. To start a new language, copy
+the POT to `languages/oc-wolt-drive-{locale}.po`, translate in Poedit,
+and Poedit will compile the matching `.mo` file alongside.
+
 == Changelog ==
+
+= 1.3.0 =
+* **Auto-dispatch now catches brand-new orders too.** The previous single-status hook only fired on transitions, so orders created at `pending` (typical for COD / pay-on-delivery) were never picked up automatically. The trigger now listens to both `woocommerce_order_status_changed` (every transition) and `woocommerce_new_order` (initial creation), compares against the configured trigger status, and dispatches. `create_for_order()` is idempotent so the double subscription is safe.
+* **HPOS (High-Performance Order Storage) compatibility declared.** All order-meta reads go through `$order->get_meta()`; admin order URLs are built via a helper that returns the correct path under either legacy `post.php` or HPOS `admin.php?page=wc-orders`; the order meta box is registered against `wc_get_page_screen_id( 'shop-order' )`; the box's render callback accepts both `WP_Post` and `WC_Order`.
+* **i18n scaffolding:** `languages/` directory + a generated `oc-wolt-drive.pot` (~170 strings) + `bin/make-pot.sh` and `bin/make-pot.bat` wrappers around `wp i18n make-pot` that regenerate the POT against the current source. Added `translators:` PHPDoc comments to every `%s` / `%d` string so translators have context.
 
 = 1.2.0 =
 * Persist additional fields from Wolt: pickup ETA, dropoff ETA (range), tracking id, Wolt's cost (in major currency units), delivered_at timestamp.
