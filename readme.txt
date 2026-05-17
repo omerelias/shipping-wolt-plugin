@@ -4,7 +4,7 @@ Tags: woocommerce, shipping, wolt, delivery
 Requires at least: 5.8
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.txt
 
@@ -48,6 +48,14 @@ No. It runs alongside it and reads its data through stable contracts (method ID 
 All options are prefixed `ocws_wolt_*` (e.g. `ocws_wolt_api_key`, `ocws_wolt_venue_id`). The plugin uninstaller cleans them up when WordPress deletes the plugin.
 
 == Changelog ==
+
+= 1.2.0 =
+* Persist additional fields from Wolt: pickup ETA, dropoff ETA (range), tracking id, Wolt's cost (in major currency units), delivered_at timestamp.
+* Admin meta box now shows "Courier ETA at venue", "Delivery ETA", and "Wolt cost" alongside the existing status / tracking link.
+* Deliveries dashboard table gets two new columns: ETA (dropoff) and Cost.
+* Webhook handler also refreshes ETAs / price / delivered_at off every event so the data stays live as the courier progresses.
+* New customer-facing tracking card on the order-received (thank-you) page and the My Account "View order" page — Wolt-branded gradient, status-aware headline ("On the way", "Delivered", etc.), prominent "Track delivery" pill button. Localised + RTL-friendly + mobile-first.
+* Tracking URL automatically added as a row to WooCommerce customer-facing emails (processing, completed).
 
 = 1.1.0 =
 * One-click "Register webhook with Wolt" button on the Webhook tab — calls `POST /v1/merchants/{merchant_id}/webhooks` for you and stores the returned webhook ID locally. No more manual curl per site.

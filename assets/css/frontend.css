@@ -1,0 +1,98 @@
+/* OC Wolt Drive — customer-facing tracking card (thank-you + my-account) */
+
+.ocws-wolt-track-card {
+	margin: 28px 0;
+	padding: 24px 28px;
+	background: linear-gradient(135deg, #E5F8FD 0%, #FFFFFF 60%);
+	border: 1px solid #BDEAF4;
+	border-radius: 16px;
+	box-shadow: 0 1px 2px rgba(15, 26, 36, 0.04), 0 12px 28px rgba(0, 194, 232, 0.08);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	color: #0F1A24;
+	text-align: start;
+}
+
+.ocws-wolt-track-card__brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	color: #009DBA;
+	font-size: 12.5px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	margin-bottom: 10px;
+}
+
+.ocws-wolt-track-card__brand svg {
+	color: #00C2E8;
+}
+
+.ocws-wolt-track-card__headline {
+	margin: 0 0 6px;
+	font-size: 22px;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	line-height: 1.25;
+	color: #0F1A24;
+}
+
+.ocws-wolt-track-card__subline {
+	margin: 0 0 18px;
+	font-size: 14.5px;
+	line-height: 1.55;
+	color: #5A6470;
+}
+
+.ocws-wolt-track-card__btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	background: #00C2E8;
+	color: #fff !important;
+	padding: 12px 22px;
+	border-radius: 999px;
+	font-size: 15px;
+	font-weight: 700;
+	text-decoration: none !important;
+	transition: background-color 0.15s, transform 0.15s, box-shadow 0.15s;
+	box-shadow: 0 4px 12px rgba(0, 194, 232, 0.3);
+}
+
+.ocws-wolt-track-card__btn:hover,
+.ocws-wolt-track-card__btn:focus {
+	background: #009DBA;
+	color: #fff !important;
+	text-decoration: none !important;
+	box-shadow: 0 6px 16px rgba(0, 157, 186, 0.35);
+	transform: translateY(-1px);
+}
+
+.ocws-wolt-track-card__btn:focus-visible {
+	outline: 3px solid rgba(0, 194, 232, 0.4);
+	outline-offset: 2px;
+}
+
+.ocws-wolt-track-card__btn:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 6px rgba(0, 157, 186, 0.3);
+}
+
+/* RTL languages (Hebrew, Arabic) — flip the arrow + keep alignment natural */
+[dir="rtl"] .ocws-wolt-track-card__btn svg {
+	transform: scaleX(-1);
+}
+
+@media (max-width: 600px) {
+	.ocws-wolt-track-card {
+		padding: 20px;
+		margin: 20px 0;
+	}
+	.ocws-wolt-track-card__headline {
+		font-size: 19px;
+	}
+	.ocws-wolt-track-card__btn {
+		width: 100%;
+		justify-content: center;
+	}
+}

@@ -51,12 +51,28 @@ class OCWS_Wolt_Order_Meta_Box {
 		$delivery_id   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERY_ID );
 		$wolt_status   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS );
 		$tracking_url  = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_TRACKING_URL );
+		$pickup_eta    = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_PICKUP_ETA );
+		$dropoff_eta   = OCWS_Wolt_Delivery_Trigger::get_dropoff_eta_display( $order );
+		$cost_amount   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COST_AMOUNT );
+		$cost_currency = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COST_CURRENCY );
 		$last_error    = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_LAST_ERROR );
 
 		if ( $status || $delivery_id || $last_error ) {
 			echo '<p><strong>' . esc_html__( 'Internal status', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $status ?: '-' ) . '</p>';
 			if ( $wolt_status ) {
 				echo '<p><strong>' . esc_html__( 'Wolt status', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $wolt_status ) . '</p>';
+			}
+			if ( $pickup_eta ) {
+				echo '<p><strong>' . esc_html__( 'Courier ETA at venue', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( OCWS_Wolt_Delivery_Trigger::format_local_time( $pickup_eta ) ) . '</p>';
+			}
+			if ( $dropoff_eta ) {
+				echo '<p><strong>' . esc_html__( 'Delivery ETA', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $dropoff_eta ) . '</p>';
+			}
+			if ( '' !== $cost_amount && null !== $cost_amount ) {
+				$formatted_cost = function_exists( 'wc_price' )
+					? wc_price( $cost_amount, array( 'currency' => $cost_currency ) )
+					: ( number_format_i18n( (float) $cost_amount, 2 ) . ' ' . esc_html( $cost_currency ) );
+				echo '<p><strong>' . esc_html__( 'Wolt cost', 'oc-wolt-drive' ) . ':</strong> ' . wp_kses_post( $formatted_cost ) . '</p>';
 			}
 			if ( $delivery_id ) {
 				echo '<p><strong>' . esc_html__( 'Delivery ID', 'oc-wolt-drive' ) . ':</strong> <code>' . esc_html( $delivery_id ) . '</code></p>';

@@ -123,9 +123,38 @@ class OCWS_Wolt_Webhook {
 		);
 		$order->add_order_note( trim( $note ) );
 		if ( $status ) {
-			$order->update_meta_data( '_ocws_wolt_wolt_status', $status );
+			$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS, $status );
 		}
 		$order->update_meta_data( '_ocws_wolt_last_event_at', current_time( 'mysql' ) );
+
+		// Refresh ETAs / price / delivered_at from event details when present.
+		if ( isset( $details['pickup']['eta'] ) && '' !== $details['pickup']['eta'] ) {
+			$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_PICKUP_ETA, (string) $details['pickup']['eta'] );
+		}
+		if ( isset( $details['dropoff']['eta'] ) ) {
+			$eta = $details['dropoff']['eta'];
+			if ( is_array( $eta ) ) {
+				if ( ! empty( $eta['min'] ) ) {
+					$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_DROPOFF_ETA_MIN, (string) $eta['min'] );
+				}
+				if ( ! empty( $eta['max'] ) ) {
+					$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_DROPOFF_ETA_MAX, (string) $eta['max'] );
+				}
+			} elseif ( '' !== $eta ) {
+				$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_DROPOFF_ETA_MIN, (string) $eta );
+				$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_DROPOFF_ETA_MAX, (string) $eta );
+			}
+		}
+		if ( ! empty( $details['dropoff']['completed_at'] ) ) {
+			$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_DELIVERED_AT, (string) $details['dropoff']['completed_at'] );
+		}
+		if ( isset( $details['price']['amount'] ) && is_numeric( $details['price']['amount'] ) ) {
+			$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_COST_AMOUNT, ( (float) $details['price']['amount'] ) / 100 );
+			if ( ! empty( $details['price']['currency'] ) ) {
+				$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_COST_CURRENCY, (string) $details['price']['currency'] );
+			}
+		}
+
 		$order->save();
 		return new WP_REST_Response( array( 'ok' => true ), 200 );
 	}

@@ -756,6 +756,8 @@ class OCWS_Wolt_Admin {
 								<th><?php esc_html_e( 'Customer', 'oc-wolt-drive' ); ?></th>
 								<th><?php esc_html_e( 'Dropoff address', 'oc-wolt-drive' ); ?></th>
 								<th><?php esc_html_e( 'Status', 'oc-wolt-drive' ); ?></th>
+								<th><?php esc_html_e( 'ETA', 'oc-wolt-drive' ); ?></th>
+								<th><?php esc_html_e( 'Cost', 'oc-wolt-drive' ); ?></th>
 								<th><?php esc_html_e( 'Created', 'oc-wolt-drive' ); ?></th>
 								<th class="ocws-wolt-actions-th"><?php esc_html_e( 'Actions', 'oc-wolt-drive' ); ?></th>
 							</tr>
@@ -822,6 +824,23 @@ class OCWS_Wolt_Admin {
 						<code><?php echo esc_html( $last_error ); ?></code>
 					</details>
 				<?php endif; ?>
+			</td>
+			<td class="ocws-wolt-col-eta">
+				<?php
+				$dropoff_eta_display = OCWS_Wolt_Delivery_Trigger::get_dropoff_eta_display( $order );
+				echo esc_html( $dropoff_eta_display ?: '—' );
+				?>
+			</td>
+			<td class="ocws-wolt-col-cost">
+				<?php
+				$cost_amount   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COST_AMOUNT );
+				$cost_currency = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COST_CURRENCY );
+				if ( '' !== $cost_amount && null !== $cost_amount && function_exists( 'wc_price' ) ) {
+					echo wp_kses_post( wc_price( $cost_amount, array( 'currency' => $cost_currency ) ) );
+				} else {
+					echo '—';
+				}
+				?>
 			</td>
 			<td class="ocws-wolt-col-date">
 				<?php echo esc_html( $order->get_date_created() ? $order->get_date_created()->date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) : '—' ); ?>

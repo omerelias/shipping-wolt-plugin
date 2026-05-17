@@ -293,12 +293,42 @@ class OCWS_Wolt_Api {
 			$tracking_url = (string) $raw['tracking_link'];
 		}
 
+		$tracking_id  = isset( $raw['tracking']['id'] ) ? (string) $raw['tracking']['id'] : '';
+		$pickup_eta   = isset( $raw['pickup']['eta'] )  ? (string) $raw['pickup']['eta']  : '';
+		// Create-delivery returns dropoff.eta as a single string; webhook events
+		// return it as { min, max }. Capture both shapes.
+		$dropoff_eta_min = '';
+		$dropoff_eta_max = '';
+		if ( isset( $raw['dropoff']['eta'] ) ) {
+			if ( is_array( $raw['dropoff']['eta'] ) ) {
+				$dropoff_eta_min = isset( $raw['dropoff']['eta']['min'] ) ? (string) $raw['dropoff']['eta']['min'] : '';
+				$dropoff_eta_max = isset( $raw['dropoff']['eta']['max'] ) ? (string) $raw['dropoff']['eta']['max'] : '';
+			} else {
+				$dropoff_eta_min = (string) $raw['dropoff']['eta'];
+				$dropoff_eta_max = $dropoff_eta_min;
+			}
+		}
+
+		// Wolt returns the delivery price in minor currency units (agorot).
+		$cost_amount   = null;
+		$cost_currency = '';
+		if ( isset( $raw['price']['amount'] ) && is_numeric( $raw['price']['amount'] ) ) {
+			$cost_amount   = ( (float) $raw['price']['amount'] ) / 100;
+			$cost_currency = isset( $raw['price']['currency'] ) ? (string) $raw['price']['currency'] : '';
+		}
+
 		return array(
 			'success'                 => true,
 			'delivery_id'             => $delivery_id,
 			'wolt_order_reference_id' => $wolt_order_ref,
 			'wolt_status'             => $wolt_status,
 			'tracking_url'            => $tracking_url,
+			'tracking_id'             => $tracking_id,
+			'pickup_eta'              => $pickup_eta,
+			'dropoff_eta_min'         => $dropoff_eta_min,
+			'dropoff_eta_max'         => $dropoff_eta_max,
+			'cost_amount'             => $cost_amount,
+			'cost_currency'           => $cost_currency,
 			'raw'                     => $raw,
 		);
 	}

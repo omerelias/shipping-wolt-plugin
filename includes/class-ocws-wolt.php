@@ -31,6 +31,7 @@ class OCWS_Wolt {
 		require_once $dir . '/class-ocws-wolt-delivery-trigger.php';
 		require_once $dir . '/class-ocws-wolt-order-meta-box.php';
 		require_once $dir . '/class-ocws-wolt-webhook.php';
+		require_once $dir . '/class-ocws-wolt-frontend.php';
 
 		add_action( 'init', array( __CLASS__, 'register_options' ) );
 		add_action( 'init', array( __CLASS__, 'init_components' ), 5 );
@@ -51,6 +52,7 @@ class OCWS_Wolt {
 		OCWS_Wolt_Delivery_Trigger::init();
 		OCWS_Wolt_Order_Meta_Box::init();
 		OCWS_Wolt_Webhook::init();
+		OCWS_Wolt_Frontend::init();
 	}
 }
 

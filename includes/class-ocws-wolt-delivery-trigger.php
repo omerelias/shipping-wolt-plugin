@@ -18,6 +18,13 @@ class OCWS_Wolt_Delivery_Trigger {
 	const META_WOLT_ORDER_REF      = '_ocws_wolt_order_reference_id';// `wolt_order_reference_id` — webhooks reference this
 	const META_WOLT_STATUS         = '_ocws_wolt_wolt_status';       // Wolt's courier state: INFO_RECEIVED, PICKED_UP, DELIVERED, …
 	const META_TRACKING_URL        = '_ocws_wolt_tracking_url';
+	const META_TRACKING_ID         = '_ocws_wolt_tracking_id';       // short tracking code (suitable for SMS)
+	const META_PICKUP_ETA          = '_ocws_wolt_pickup_eta';        // ISO 8601 — when courier arrives at venue
+	const META_DROPOFF_ETA_MIN     = '_ocws_wolt_dropoff_eta_min';   // ISO 8601 — earliest customer arrival
+	const META_DROPOFF_ETA_MAX     = '_ocws_wolt_dropoff_eta_max';   // ISO 8601 — latest customer arrival
+	const META_COST_AMOUNT         = '_ocws_wolt_cost_amount';       // numeric, major units (e.g. 42.00)
+	const META_COST_CURRENCY       = '_ocws_wolt_cost_currency';     // ISO 4217
+	const META_DELIVERED_AT        = '_ocws_wolt_delivered_at';      // ISO 8601 — set when dropoff_completed event arrives
 	const META_LAST_ERROR          = '_ocws_wolt_last_error';
 
 	/**
@@ -91,6 +98,22 @@ class OCWS_Wolt_Delivery_Trigger {
 			}
 			if ( ! empty( $result['tracking_url'] ) ) {
 				$order->update_meta_data( self::META_TRACKING_URL, $result['tracking_url'] );
+			}
+			if ( ! empty( $result['tracking_id'] ) ) {
+				$order->update_meta_data( self::META_TRACKING_ID, $result['tracking_id'] );
+			}
+			if ( ! empty( $result['pickup_eta'] ) ) {
+				$order->update_meta_data( self::META_PICKUP_ETA, $result['pickup_eta'] );
+			}
+			if ( ! empty( $result['dropoff_eta_min'] ) ) {
+				$order->update_meta_data( self::META_DROPOFF_ETA_MIN, $result['dropoff_eta_min'] );
+			}
+			if ( ! empty( $result['dropoff_eta_max'] ) ) {
+				$order->update_meta_data( self::META_DROPOFF_ETA_MAX, $result['dropoff_eta_max'] );
+			}
+			if ( null !== $result['cost_amount'] ) {
+				$order->update_meta_data( self::META_COST_AMOUNT, $result['cost_amount'] );
+				$order->update_meta_data( self::META_COST_CURRENCY, $result['cost_currency'] );
 			}
 			$order->delete_meta_data( self::META_LAST_ERROR );
 			$order->save();
@@ -363,6 +386,51 @@ class OCWS_Wolt_Delivery_Trigger {
 			$date->add( new DateInterval( 'PT' . $offset_min . 'M' ) );
 		}
 		return $date->format( DateTimeInterface::ATOM );
+	}
+
+	/**
+	 * Format an ISO 8601 timestamp into the site's local time using WP's
+	 * date+time format. Returns an empty string on parse failure.
+	 *
+	 * @param string $iso ISO 8601 timestamp from Wolt.
+	 * @param string $format Optional custom format. Defaults to WP's date+time.
+	 * @return string
+	 */
+	public static function format_local_time( $iso, $format = '' ) {
+		if ( ! $iso ) {
+			return '';
+		}
+		try {
+			$dt = new DateTime( $iso );
+			$dt->setTimezone( wp_timezone() );
+		} catch ( Exception $e ) {
+			return '';
+		}
+		if ( '' === $format ) {
+			$format = get_option( 'time_format', 'H:i' );
+		}
+		return wp_date( $format, $dt->getTimestamp() );
+	}
+
+	/**
+	 * Build a "HH:MM" or "HH:MM – HH:MM" string from the dropoff ETA range
+	 * stored on an order. Empty when no ETA is known.
+	 *
+	 * @param WC_Order $order Order.
+	 * @return string
+	 */
+	public static function get_dropoff_eta_display( $order ) {
+		$min = $order->get_meta( self::META_DROPOFF_ETA_MIN );
+		$max = $order->get_meta( self::META_DROPOFF_ETA_MAX );
+		$min_l = self::format_local_time( $min );
+		$max_l = self::format_local_time( $max );
+		if ( '' === $min_l && '' === $max_l ) {
+			return '';
+		}
+		if ( $min_l === $max_l || '' === $max_l ) {
+			return $min_l;
+		}
+		return $min_l . ' – ' . $max_l;
 	}
 }
 
