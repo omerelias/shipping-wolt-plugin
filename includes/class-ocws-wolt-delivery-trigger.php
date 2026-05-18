@@ -25,6 +25,12 @@ class OCWS_Wolt_Delivery_Trigger {
 	const META_COST_AMOUNT         = '_ocws_wolt_cost_amount';       // numeric, major units (e.g. 42.00)
 	const META_COST_CURRENCY       = '_ocws_wolt_cost_currency';     // ISO 4217
 	const META_DELIVERED_AT        = '_ocws_wolt_delivered_at';      // ISO 8601 — set when dropoff_completed event arrives
+	const META_PICKUP_DISPLAY_NAME = '_ocws_wolt_pickup_display_name';// Wolt's own label for our venue (echoed back)
+	const META_CUSTOMER_SUPPORT    = '_ocws_wolt_customer_support';  // JSON of {url,email,phone_number}, when populated
+	const META_COURIER_LAT         = '_ocws_wolt_courier_lat';       // latest courier latitude (from location_updated event)
+	const META_COURIER_LNG         = '_ocws_wolt_courier_lng';
+	const META_COURIER_AT          = '_ocws_wolt_courier_location_at';// MySQL timestamp of last location_updated event
+	const META_COURIER_INFO        = '_ocws_wolt_courier_info';      // JSON of {id,vehicle_type} from any event
 	const META_LAST_ERROR          = '_ocws_wolt_last_error';
 
 	/**
@@ -178,6 +184,12 @@ class OCWS_Wolt_Delivery_Trigger {
 				$order->update_meta_data( self::META_COST_AMOUNT, $result['cost_amount'] );
 				$order->update_meta_data( self::META_COST_CURRENCY, $result['cost_currency'] );
 			}
+			if ( ! empty( $result['pickup_display_name'] ) ) {
+				$order->update_meta_data( self::META_PICKUP_DISPLAY_NAME, $result['pickup_display_name'] );
+			}
+			if ( ! empty( $result['customer_support'] ) ) {
+				$order->update_meta_data( self::META_CUSTOMER_SUPPORT, wp_json_encode( $result['customer_support'], JSON_UNESCAPED_UNICODE ) );
+			}
 			$order->delete_meta_data( self::META_LAST_ERROR );
 			$order->save();
 			$order->add_order_note(
@@ -246,14 +258,24 @@ class OCWS_Wolt_Delivery_Trigger {
 			}
 		);
 
+		// Pickup options: tell Wolt how long the venue needs to prepare so the
+		// courier doesn't arrive too early. 0 means "send the default" — we
+		// still include the key so the value is explicit per delivery.
+		$pickup = array(
+			'location' => array(
+				'formatted_address' => $pickup_formatted,
+			),
+		);
+		$min_prep = OCWS_Wolt_Settings::get_min_preparation_time();
+		if ( $min_prep > 0 ) {
+			$pickup['options'] = array( 'min_preparation_time_minutes' => $min_prep );
+		}
+
 		$payload = array(
 			'merchant_order_reference_id' => (string) $order->get_id(),
 			'order_number'                => (string) $order->get_order_number(),
-			'pickup'                      => array(
-				'location' => array(
-					'formatted_address' => $pickup_formatted,
-				),
-			),
+			'language'                    => OCWS_Wolt_Settings::get_language(),
+			'pickup'                      => $pickup,
 			'dropoff'                     => $dropoff,
 			'recipient'                   => $recipient,
 			'parcels'                     => self::build_parcels( $order ),
@@ -355,8 +377,9 @@ class OCWS_Wolt_Delivery_Trigger {
 	 * @return array
 	 */
 	protected static function build_parcels( $order ) {
-		$currency = OCWS_Wolt_Settings::get_currency();
-		$parcels  = array();
+		$currency  = OCWS_Wolt_Settings::get_currency();
+		$age_check = OCWS_Wolt_Settings::is_age_check_18_enabled();
+		$parcels   = array();
 		foreach ( $order->get_items() as $item_id => $item ) {
 			if ( ! $item instanceof WC_Order_Item_Product ) {
 				continue;
@@ -365,7 +388,7 @@ class OCWS_Wolt_Delivery_Trigger {
 			$total = (float) $item->get_total() + (float) $item->get_total_tax();
 			$unit  = $qty > 0 ? ( $total / $qty ) : $total;
 			for ( $i = 0; $i < $qty; $i++ ) {
-				$parcels[] = array(
+				$parcel = array(
 					'description' => $item->get_name(),
 					'identifier'  => sprintf( '%d-%d-%d', $order->get_id(), $item_id, $i ),
 					'price'       => array(
@@ -373,10 +396,14 @@ class OCWS_Wolt_Delivery_Trigger {
 						'currency' => $currency,
 					),
 				);
+				if ( $age_check ) {
+					$parcel['dropoff_restrictions'] = 'age_check_18';
+				}
+				$parcels[] = $parcel;
 			}
 		}
 		if ( empty( $parcels ) ) {
-			$parcels[] = array(
+			$fallback = array(
 				/* translators: %s: WC order number */
 				'description' => sprintf( __( 'Order #%s', 'oc-wolt-drive' ), $order->get_order_number() ),
 				'identifier'  => (string) $order->get_id(),
@@ -385,6 +412,10 @@ class OCWS_Wolt_Delivery_Trigger {
 					'currency' => $currency,
 				),
 			);
+			if ( $age_check ) {
+				$fallback['dropoff_restrictions'] = 'age_check_18';
+			}
+			$parcels[] = $fallback;
 		}
 		return $parcels;
 	}

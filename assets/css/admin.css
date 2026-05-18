@@ -813,6 +813,31 @@
 
 .ocws-wolt-modal-msg.is-bad { color: #B91C1C; }
 
+/* Courier location map modal */
+
+.ocws-wolt-map-modal {
+	max-width: 640px;
+	padding: 22px;
+}
+
+.ocws-wolt-map-modal h3 {
+	margin-bottom: 4px;
+}
+
+.ocws-wolt-map-updated {
+	margin: 0 0 14px;
+	font-size: 12.5px;
+	color: var(--ocws-wolt-muted);
+}
+
+.ocws-wolt-map-iframe {
+	width: 100%;
+	height: 360px;
+	border: 0;
+	border-radius: 10px;
+	background: var(--ocws-wolt-bg);
+}
+
 /* ─── Webhook registration block ───────────────────────────────── */
 
 .ocws-wolt-webhook-reg {

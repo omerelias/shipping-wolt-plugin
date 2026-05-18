@@ -113,6 +113,10 @@ class OCWS_Wolt_Admin {
 					'cancelOk'        => __( 'Delivery cancelled.', 'oc-wolt-drive' ),
 					'confirmCancel'   => __( 'Cancel this Wolt delivery? This cannot be undone.', 'oc-wolt-drive' ),
 					'reasonRequired'  => __( 'Please pick a cancellation reason.', 'oc-wolt-drive' ),
+					'courierLocation' => __( 'Courier location', 'oc-wolt-drive' ),
+					'lastUpdated'     => __( 'Last updated:', 'oc-wolt-drive' ),
+					'openInMaps'      => __( 'Open in Google Maps', 'oc-wolt-drive' ),
+					'close'           => __( 'Close', 'oc-wolt-drive' ),
 				),
 			)
 		);
@@ -249,6 +253,23 @@ class OCWS_Wolt_Admin {
 						__( 'Dispatch offset (minutes)', 'oc-wolt-drive' ),
 						__( 'Minutes after the chosen slot start at which Wolt should arrive (e.g. 30 = 16:30 if the slot is 16:00–19:00).', 'oc-wolt-drive' )
 					);
+					self::render_number(
+						OCWS_Wolt_Settings::OPTION_MIN_PREP_TIME,
+						__( 'Venue prep time (minutes)', 'oc-wolt-drive' ),
+						__( 'How many minutes the venue needs to prepare an order before the courier should arrive. Sent as pickup.options.min_preparation_time_minutes. Wolt default is 30.', 'oc-wolt-drive' )
+					);
+					self::render_text(
+						OCWS_Wolt_Settings::OPTION_LANGUAGE,
+						__( 'Tracking page language', 'oc-wolt-drive' ),
+						__( 'Two-letter ISO 639-1 code (e.g. he, en). Leave empty to auto-detect from the site locale.', 'oc-wolt-drive' ),
+						'',
+						array( 'attrs' => 'maxlength="2" size="5"' )
+					);
+					self::render_checkbox(
+						OCWS_Wolt_Settings::OPTION_AGE_CHECK_18,
+						__( 'Require 18+ verification (all deliveries)', 'oc-wolt-drive' ),
+						__( 'Adds dropoff_restrictions: "age_check_18" to every parcel. The Wolt courier must verify the recipient is 18+ before handing the order over. Enable only if every product you sell is age-restricted (alcohol, tobacco, etc.). Local age-law compliance remains the merchant\'s responsibility.', 'oc-wolt-drive' )
+					);
 					?>
 				</table>
 			</div>
@@ -335,6 +356,11 @@ class OCWS_Wolt_Admin {
 				<h2><?php esc_html_e( 'Advanced', 'oc-wolt-drive' ); ?></h2>
 				<table class="form-table" role="presentation">
 					<?php
+					self::render_checkbox(
+						OCWS_Wolt_Settings::OPTION_SUBSCRIBE_LOCATION,
+						__( 'Subscribe to courier location updates', 'oc-wolt-drive' ),
+						__( 'When enabled, the Location button in the Deliveries tab opens a live map of the assigned courier. Wolt warn this is a HIGH-VOLUME webhook event (fires every few seconds during transit). Re-register the webhook after toggling so Wolt know to include order.location_updated events.', 'oc-wolt-drive' )
+					);
 					self::render_text(
 						OCWS_Wolt_Settings::OPTION_METHOD_ID_PREFIX,
 						__( 'Host shipping method ID prefix', 'oc-wolt-drive' ),
@@ -878,6 +904,20 @@ class OCWS_Wolt_Admin {
 				<a href="<?php echo esc_url( ocws_wolt_order_edit_url( $order_id ) ); ?>" class="button">
 					<?php esc_html_e( 'Order', 'oc-wolt-drive' ); ?>
 				</a>
+				<?php
+				$lat = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COURIER_LAT );
+				$lng = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COURIER_LNG );
+				if ( '' !== $lat && '' !== $lng ) :
+					$courier_at = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COURIER_AT );
+					?>
+					<button type="button" class="button ocws-wolt-btn-location"
+						data-lat="<?php echo esc_attr( $lat ); ?>"
+						data-lng="<?php echo esc_attr( $lng ); ?>"
+						data-at="<?php echo esc_attr( $courier_at ); ?>"
+						data-order="<?php echo esc_attr( $order->get_order_number() ); ?>">
+						<?php esc_html_e( 'Location', 'oc-wolt-drive' ); ?>
+					</button>
+				<?php endif; ?>
 				<?php if ( $can_cancel ) : ?>
 					<button type="button" class="button button-link-delete ocws-wolt-btn-cancel"
 						data-order-id="<?php echo esc_attr( $order_id ); ?>"

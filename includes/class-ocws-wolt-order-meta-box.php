@@ -58,15 +58,20 @@ class OCWS_Wolt_Order_Meta_Box {
 		if ( ! $order ) {
 			return;
 		}
-		$status        = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_STATUS );
-		$delivery_id   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERY_ID );
-		$wolt_status   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS );
-		$tracking_url  = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_TRACKING_URL );
-		$pickup_eta    = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_PICKUP_ETA );
-		$dropoff_eta   = OCWS_Wolt_Delivery_Trigger::get_dropoff_eta_display( $order );
-		$cost_amount   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COST_AMOUNT );
-		$cost_currency = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COST_CURRENCY );
-		$last_error    = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_LAST_ERROR );
+		$status           = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_STATUS );
+		$delivery_id      = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERY_ID );
+		$wolt_status      = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS );
+		$tracking_url     = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_TRACKING_URL );
+		$pickup_eta       = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_PICKUP_ETA );
+		$dropoff_eta      = OCWS_Wolt_Delivery_Trigger::get_dropoff_eta_display( $order );
+		$cost_amount      = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COST_AMOUNT );
+		$cost_currency    = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COST_CURRENCY );
+		$pickup_display   = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_PICKUP_DISPLAY_NAME );
+		$customer_support_json = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_CUSTOMER_SUPPORT );
+		$courier_info_json     = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COURIER_INFO );
+		$courier_lat      = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COURIER_LAT );
+		$courier_lng      = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COURIER_LNG );
+		$last_error       = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_LAST_ERROR );
 
 		if ( $status || $delivery_id || $last_error ) {
 			echo '<p><strong>' . esc_html__( 'Internal status', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $status ?: '-' ) . '</p>';
@@ -84,6 +89,44 @@ class OCWS_Wolt_Order_Meta_Box {
 					? wc_price( $cost_amount, array( 'currency' => $cost_currency ) )
 					: ( number_format_i18n( (float) $cost_amount, 2 ) . ' ' . esc_html( $cost_currency ) );
 				echo '<p><strong>' . esc_html__( 'Wolt cost', 'oc-wolt-drive' ) . ':</strong> ' . wp_kses_post( $formatted_cost ) . '</p>';
+			}
+			if ( $pickup_display ) {
+				echo '<p><strong>' . esc_html__( 'Pickup venue (Wolt label)', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $pickup_display ) . '</p>';
+			}
+			$courier = $courier_info_json ? json_decode( $courier_info_json, true ) : null;
+			if ( is_array( $courier ) && ! empty( $courier ) ) {
+				$bits = array();
+				if ( ! empty( $courier['vehicle_type'] ) ) {
+					$bits[] = esc_html( $courier['vehicle_type'] );
+				}
+				if ( ! empty( $courier['id'] ) ) {
+					$bits[] = '#' . esc_html( $courier['id'] );
+				}
+				if ( ! empty( $bits ) ) {
+					echo '<p><strong>' . esc_html__( 'Courier', 'oc-wolt-drive' ) . ':</strong> ' . implode( ' · ', $bits ) . '</p>';
+				}
+			}
+			if ( '' !== $courier_lat && '' !== $courier_lng ) {
+				$maps_url = 'https://www.google.com/maps?q=' . rawurlencode( $courier_lat . ',' . $courier_lng );
+				echo '<p><strong>' . esc_html__( 'Courier location', 'oc-wolt-drive' ) . ':</strong> '
+					. '<a href="' . esc_url( $maps_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View on map', 'oc-wolt-drive' ) . '</a>'
+					. '</p>';
+			}
+			$support = $customer_support_json ? json_decode( $customer_support_json, true ) : null;
+			if ( is_array( $support ) ) {
+				$support_bits = array();
+				if ( ! empty( $support['phone_number'] ) ) {
+					$support_bits[] = '<a href="tel:' . esc_attr( $support['phone_number'] ) . '">' . esc_html( $support['phone_number'] ) . '</a>';
+				}
+				if ( ! empty( $support['email'] ) ) {
+					$support_bits[] = '<a href="mailto:' . esc_attr( $support['email'] ) . '">' . esc_html( $support['email'] ) . '</a>';
+				}
+				if ( ! empty( $support['url'] ) ) {
+					$support_bits[] = '<a href="' . esc_url( $support['url'] ) . '" target="_blank" rel="noopener">' . esc_html__( 'Link', 'oc-wolt-drive' ) . '</a>';
+				}
+				if ( ! empty( $support_bits ) ) {
+					echo '<p><strong>' . esc_html__( 'Wolt customer support', 'oc-wolt-drive' ) . ':</strong> ' . implode( ' · ', $support_bits ) . '</p>';
+				}
 			}
 			if ( $delivery_id ) {
 				echo '<p><strong>' . esc_html__( 'Delivery ID', 'oc-wolt-drive' ) . ':</strong> <code>' . esc_html( $delivery_id ) . '</code></p>';

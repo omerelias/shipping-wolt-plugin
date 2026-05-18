@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: OC Wolt Drive 1.3.0\n"
+"Project-Id-Version: OC Wolt Drive 1.4.0\n"
 "Report-Msgid-Bugs-To: https://github.com/omerelias/shipping-wolt-plugin/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-17T12:27:45+02:00\n"
+"POT-Creation-Date: 2026-05-18T12:59:01+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: oc-wolt-drive\n"
@@ -36,14 +36,14 @@ msgstr ""
 
 #: includes/class-ocws-wolt-admin.php:46
 #: includes/class-ocws-wolt-admin.php:47
-#: includes/class-ocws-wolt-admin.php:142
+#: includes/class-ocws-wolt-admin.php:146
 #: includes/class-ocws-wolt-frontend.php:76
 #: includes/class-ocws-wolt-order-meta-box.php:38
 msgid "Wolt Drive"
 msgstr ""
 
 #: includes/class-ocws-wolt-admin.php:66
-#: includes/class-ocws-wolt-admin.php:151
+#: includes/class-ocws-wolt-admin.php:155
 msgid "Settings"
 msgstr ""
 
@@ -81,7 +81,7 @@ msgid "Webhook registered. ID stored. Wolt will start sending events."
 msgstr ""
 
 #: includes/class-ocws-wolt-admin.php:110
-#: includes/class-ocws-wolt-admin.php:999
+#: includes/class-ocws-wolt-admin.php:1062
 msgid "Webhook unregistered."
 msgstr ""
 
@@ -106,504 +106,605 @@ msgstr ""
 msgid "Please pick a cancellation reason."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:136
+#: includes/class-ocws-wolt-admin.php:116
+#: includes/class-ocws-wolt-order-meta-box.php:111
+msgid "Courier location"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:117
+msgid "Last updated:"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:118
+msgid "Open in Google Maps"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:119
+msgid "Close"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:140
 msgid "You do not have permission to access this page."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:143
+#: includes/class-ocws-wolt-admin.php:147
 msgid "Wolt Drive courier integration for WooCommerce."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:147
+#: includes/class-ocws-wolt-admin.php:151
 msgid "Wolt sections"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:150
+#: includes/class-ocws-wolt-admin.php:154
 msgid "Deliveries"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:152
+#: includes/class-ocws-wolt-admin.php:156
 msgid "Webhook"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:153
+#: includes/class-ocws-wolt-admin.php:157
 msgid "Tools"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:197
+#: includes/class-ocws-wolt-admin.php:201
 msgid "Plugin enabled"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:201
+#: includes/class-ocws-wolt-admin.php:205
 msgid "API credentials"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:205
+#: includes/class-ocws-wolt-admin.php:209
 msgid "Webhook signing"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:209
+#: includes/class-ocws-wolt-admin.php:213
 msgid "Host shipping plugin"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:227
+#: includes/class-ocws-wolt-admin.php:231
 msgid "General"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:232
+#: includes/class-ocws-wolt-admin.php:236
 msgid "Enable Wolt Drive"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:233
+#: includes/class-ocws-wolt-admin.php:237
 msgid "Override shipping price with Wolt quote at checkout (falls back to default if Wolt is unavailable)."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:237
+#: includes/class-ocws-wolt-admin.php:241
 msgid "Pickup address (venue)"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:238
+#: includes/class-ocws-wolt-admin.php:242
 msgid "Where Wolt picks up the order. Leave empty to fall back to the WooCommerce store address."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:243
+#: includes/class-ocws-wolt-admin.php:247
 msgid "Auto-dispatch on status"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:245
+#: includes/class-ocws-wolt-admin.php:249
 msgid "Order status that auto-creates the Wolt delivery. Manual dispatch is always available from the order screen."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:249
+#: includes/class-ocws-wolt-admin.php:253
 msgid "Dispatch offset (minutes)"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:250
+#: includes/class-ocws-wolt-admin.php:254
 msgid "Minutes after the chosen slot start at which Wolt should arrive (e.g. 30 = 16:30 if the slot is 16:00–19:00)."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:257
+#: includes/class-ocws-wolt-admin.php:258
+msgid "Venue prep time (minutes)"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:259
+msgid "How many minutes the venue needs to prepare an order before the courier should arrive. Sent as pickup.options.min_preparation_time_minutes. Wolt default is 30."
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:263
+msgid "Tracking page language"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:264
+msgid "Two-letter ISO 639-1 code (e.g. he, en). Leave empty to auto-detect from the site locale."
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:270
+msgid "Require 18+ verification (all deliveries)"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:271
+msgid "Adds dropoff_restrictions: \"age_check_18\" to every parcel. The Wolt courier must verify the recipient is 18+ before handing the order over. Enable only if every product you sell is age-restricted (alcohol, tobacco, etc.). Local age-law compliance remains the merchant's responsibility."
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:278
 msgid "API connection"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:262
+#: includes/class-ocws-wolt-admin.php:283
 msgid "API base URL"
 msgstr ""
 
 #. translators: 1: sandbox URL, 2: production URL
-#: includes/class-ocws-wolt-admin.php:265
+#: includes/class-ocws-wolt-admin.php:286
 msgid "Sandbox: %1$s · Production: %2$s"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:274
+#: includes/class-ocws-wolt-admin.php:295
 msgid "API key (Merchant Key)"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:275
+#: includes/class-ocws-wolt-admin.php:296
 msgid "Bearer token from Wolt. Stored as plaintext in WP options — protect database access."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:281
+#: includes/class-ocws-wolt-admin.php:302
 msgid "Venue ID"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:282
+#: includes/class-ocws-wolt-admin.php:303
 msgid "Wolt venue identifier (path parameter for /v1/venues/{venue_id}/*)."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:286
+#: includes/class-ocws-wolt-admin.php:307
 msgid "Merchant ID"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:287
+#: includes/class-ocws-wolt-admin.php:308
 msgid "Used for /merchants/{merchant_id}/delivery-areas and similar venueless endpoints."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:291
+#: includes/class-ocws-wolt-admin.php:312
 msgid "Currency"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:292
+#: includes/class-ocws-wolt-admin.php:313
 msgid "ISO 4217 code, e.g. ILS, USD. Used when sending parcel prices to Wolt."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:298
+#: includes/class-ocws-wolt-admin.php:319
 msgid "Test connection"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:300
+#: includes/class-ocws-wolt-admin.php:321
 msgid "Run /delivery-areas call"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:302
+#: includes/class-ocws-wolt-admin.php:323
 msgid "Performs a read-only GET against the configured API URL to confirm credentials work."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:309
+#: includes/class-ocws-wolt-admin.php:330
 msgid "Pricing markup"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:315
+#: includes/class-ocws-wolt-admin.php:336
 msgid "Markup type"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:318
+#: includes/class-ocws-wolt-admin.php:339
 msgid "Fixed amount"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:319
+#: includes/class-ocws-wolt-admin.php:340
 msgid "Percentage"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:326
+#: includes/class-ocws-wolt-admin.php:347
 msgid "Markup value"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:327
+#: includes/class-ocws-wolt-admin.php:348
 msgid "Fixed amount (in store currency) or percentage (e.g. 10 = +10%)."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:335
+#: includes/class-ocws-wolt-admin.php:356
 msgid "Advanced"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:340
+#: includes/class-ocws-wolt-admin.php:361
+msgid "Subscribe to courier location updates"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:362
+msgid "When enabled, the Location button in the Deliveries tab opens a live map of the assigned courier. Wolt warn this is a HIGH-VOLUME webhook event (fires every few seconds during transit). Re-register the webhook after toggling so Wolt know to include order.location_updated events."
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:366
 msgid "Host shipping method ID prefix"
 msgstr ""
 
 #. translators: %s: default method id
-#: includes/class-ocws-wolt-admin.php:343
+#: includes/class-ocws-wolt-admin.php:369
 msgid "Shipping method ID prefix to recognise as eligible for Wolt dispatch. Default: %s"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:368
+#: includes/class-ocws-wolt-admin.php:394
 msgid "Webhook endpoint"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:369
+#: includes/class-ocws-wolt-admin.php:395
 msgid "Provide this URL and the shared secret below to Wolt when registering the webhook (see the Wolt Drive webhook docs)."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:373
+#: includes/class-ocws-wolt-admin.php:399
 msgid "URL"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:376
-#: includes/class-ocws-wolt-admin.php:401
+#: includes/class-ocws-wolt-admin.php:402
+#: includes/class-ocws-wolt-admin.php:427
 msgid "Copy"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:385
+#: includes/class-ocws-wolt-admin.php:411
 msgid "Shared secret (HS256)"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:387
+#: includes/class-ocws-wolt-admin.php:413
 msgid "You generate this secret here, then give it to Wolt at webhook registration. Wolt signs every event JWT with it; this plugin verifies the signature on every incoming request and rejects anything that does not match."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:391
+#: includes/class-ocws-wolt-admin.php:417
 msgid "Secret"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:399
+#: includes/class-ocws-wolt-admin.php:425
 msgid "Click \"Generate\" to create a new secret"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:400
+#: includes/class-ocws-wolt-admin.php:426
 msgid "Generate"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:402
+#: includes/class-ocws-wolt-admin.php:428
 msgid "Hash-equals verification, time-constant. Store securely; rotate by generating a new value and re-registering at Wolt."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:407
+#: includes/class-ocws-wolt-admin.php:433
 msgid "Save secret"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:411
+#: includes/class-ocws-wolt-admin.php:437
 msgid "Registration with Wolt"
 msgstr ""
 
 #. translators: %s: link
-#: includes/class-ocws-wolt-admin.php:418
+#: includes/class-ocws-wolt-admin.php:444
 msgid "Calls %s under the hood. You only need to do this once per merchant."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:423
+#: includes/class-ocws-wolt-admin.php:449
 msgid "Wolt docs"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:444
+#: includes/class-ocws-wolt-admin.php:470
 msgid "Registered"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:445
+#: includes/class-ocws-wolt-admin.php:471
 msgid "Not registered"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:449
+#: includes/class-ocws-wolt-admin.php:475
 msgid "Wolt webhook ID:"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:455
+#: includes/class-ocws-wolt-admin.php:481
 msgid "Re-register"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:456
+#: includes/class-ocws-wolt-admin.php:482
 msgid "Unregister"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:459
+#: includes/class-ocws-wolt-admin.php:485
 msgid "Register webhook with Wolt"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:467
+#: includes/class-ocws-wolt-admin.php:493
 msgid "Fill in API URL, API Key, Merchant ID, and a webhook secret before registering."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:482
+#: includes/class-ocws-wolt-admin.php:509
 msgid "Quote simulator"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:483
-msgid "Send a test shipment-promise to Wolt and preview the scheduled dropoff time the plugin would calculate for a given slot."
+#: includes/class-ocws-wolt-admin.php:510
+msgid "See the live shipment quote from Wolt for any address. Optionally add a checkout-style time window to preview the scheduled customer dropoff time the plugin would send (slot start + your dispatch offset from Settings)."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:488
+#: includes/class-ocws-wolt-admin.php:514
+msgid "1. Destination"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:515
+msgid "Use a full address, coordinates, or both. Coordinates help when the address is vague or hard to geocode."
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:517
 msgid "Address"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:489
+#: includes/class-ocws-wolt-admin.php:518
+msgid "Dizengoff St 50, Tel Aviv-Yafo"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:518
 msgid "Street, City"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:492
-msgid "Latitude"
+#: includes/class-ocws-wolt-admin.php:522
+msgid "Latitude (optional)"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:496
-msgid "Longitude"
+#: includes/class-ocws-wolt-admin.php:523
+msgid "e.g. 32.0853"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:500
-msgid "Slot date (d/m/Y)"
+#: includes/class-ocws-wolt-admin.php:526
+msgid "Longitude (optional)"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:504
-msgid "Slot start (HH:MM)"
+#: includes/class-ocws-wolt-admin.php:527
+msgid "e.g. 34.7818"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:508
+#: includes/class-ocws-wolt-admin.php:533
+msgid "2. Delivery window (optional)"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:534
+msgid "Same formats as at checkout. Leave empty to only preview pricing; the scheduled dropoff preview appears when both date and start time are valid."
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:537
+msgid "Date"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:538
+msgid "e.g. 25/02/2026 (day/month/year)"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:541
+msgid "Window start"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:542
+msgid "e.g. 16:00 (24-hour)"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:548
 msgid "Run simulation"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:602
-#: includes/class-ocws-wolt-admin.php:915
+#: includes/class-ocws-wolt-admin.php:552
+msgid "Simulation results"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:643
+#: includes/class-ocws-wolt-admin.php:978
 msgid "Forbidden."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:613
-#: includes/class-ocws-wolt-admin.php:930
-#: includes/class-ocws-wolt-admin.php:967
-#: includes/class-ocws-wolt-admin.php:995
+#: includes/class-ocws-wolt-admin.php:654
+#: includes/class-ocws-wolt-admin.php:993
+#: includes/class-ocws-wolt-admin.php:1030
+#: includes/class-ocws-wolt-admin.php:1058
 msgid "Unknown error."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:663
+#: includes/class-ocws-wolt-admin.php:706
 msgid "Shipment promise"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:666
-msgid "Quote"
+#: includes/class-ocws-wolt-admin.php:710
+msgid "Wolt quote"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:667
-msgid "With markup"
+#: includes/class-ocws-wolt-admin.php:711
+msgid "With your markup"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:671
+#: includes/class-ocws-wolt-admin.php:714
+msgid "Error"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:718
 msgid "Scheduled dropoff time"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:675
-msgid "No slot provided or invalid format — delivery would be sent as ASAP."
+#: includes/class-ocws-wolt-admin.php:721
+msgid "Includes your dispatch offset from Settings."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:734
+#: includes/class-ocws-wolt-admin.php:723
+msgid "Add a valid date and window start above, or a real order without a slot is sent as ASAP."
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:783
 msgid "Wolt deliveries"
 msgstr ""
 
 #. translators: %d: total deliveries
-#: includes/class-ocws-wolt-admin.php:739
+#: includes/class-ocws-wolt-admin.php:788
 msgid "%d delivery"
 msgid_plural "%d deliveries"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-ocws-wolt-admin.php:748
+#: includes/class-ocws-wolt-admin.php:797
 msgid "No Wolt deliveries dispatched yet."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:749
+#: includes/class-ocws-wolt-admin.php:798
 msgid "When orders move to the auto-dispatch status (or you click \"Create Wolt delivery now\" on an order), they will appear here."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:756
-#: includes/class-ocws-wolt-admin.php:856
+#: includes/class-ocws-wolt-admin.php:805
+#: includes/class-ocws-wolt-admin.php:905
 msgid "Order"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:757
+#: includes/class-ocws-wolt-admin.php:806
 msgid "Customer"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:758
+#: includes/class-ocws-wolt-admin.php:807
 msgid "Dropoff address"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:759
+#: includes/class-ocws-wolt-admin.php:808
 msgid "Status"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:760
+#: includes/class-ocws-wolt-admin.php:809
 msgid "ETA"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:761
+#: includes/class-ocws-wolt-admin.php:810
 msgid "Cost"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:762
+#: includes/class-ocws-wolt-admin.php:811
 msgid "Created"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:763
+#: includes/class-ocws-wolt-admin.php:812
 msgid "Actions"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:824
+#: includes/class-ocws-wolt-admin.php:873
 msgid "View error"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:852
+#: includes/class-ocws-wolt-admin.php:901
 msgid "Track"
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:862
-msgid "Cancel"
-msgstr ""
-
-#: includes/class-ocws-wolt-admin.php:912
-msgid "Order ID and reason required."
-msgstr ""
-
-#: includes/class-ocws-wolt-admin.php:920
-#: includes/class-ocws-wolt-order-meta-box.php:122
-msgid "Order not found."
+#: includes/class-ocws-wolt-admin.php:918
+msgid "Location"
 msgstr ""
 
 #: includes/class-ocws-wolt-admin.php:925
+msgid "Cancel"
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:975
+msgid "Order ID and reason required."
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:983
+#: includes/class-ocws-wolt-order-meta-box.php:165
+msgid "Order not found."
+msgstr ""
+
+#: includes/class-ocws-wolt-admin.php:988
 msgid "Order is missing wolt_order_reference_id — cannot cancel via API."
 msgstr ""
 
 #. translators: %s: error message returned by Wolt
-#: includes/class-ocws-wolt-admin.php:933
+#: includes/class-ocws-wolt-admin.php:996
 msgid "Wolt: cancel failed — %s"
 msgstr ""
 
 #. translators: %s: reason
-#: includes/class-ocws-wolt-admin.php:944
+#: includes/class-ocws-wolt-admin.php:1007
 msgid "Wolt: delivery cancelled (reason: %s)."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:948
+#: includes/class-ocws-wolt-admin.php:1011
 msgid "Cancelled."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:962
+#: includes/class-ocws-wolt-admin.php:1025
 msgid "Generate a webhook secret first."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:977
+#: includes/class-ocws-wolt-admin.php:1040
 msgid "Webhook registered."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:990
+#: includes/class-ocws-wolt-admin.php:1053
 msgid "No webhook is registered."
 msgstr ""
 
-#: includes/class-ocws-wolt-api.php:120
-#: includes/class-ocws-wolt-api.php:257
+#: includes/class-ocws-wolt-api.php:129
+#: includes/class-ocws-wolt-api.php:273
 msgid "Wolt API URL or Venue ID not configured."
 msgstr ""
 
-#: includes/class-ocws-wolt-api.php:164
+#: includes/class-ocws-wolt-api.php:173
 msgid "Invalid shipment promise response."
 msgstr ""
 
-#: includes/class-ocws-wolt-api.php:351
+#: includes/class-ocws-wolt-api.php:374
 msgid "Wolt API URL not configured."
 msgstr ""
 
-#: includes/class-ocws-wolt-api.php:354
+#: includes/class-ocws-wolt-api.php:377
 msgid "Missing wolt_order_reference_id."
 msgstr ""
 
-#: includes/class-ocws-wolt-api.php:380
-#: includes/class-ocws-wolt-api.php:425
-#: includes/class-ocws-wolt-api.php:462
-#: includes/class-ocws-wolt-api.php:481
+#: includes/class-ocws-wolt-api.php:403
+#: includes/class-ocws-wolt-api.php:448
+#: includes/class-ocws-wolt-api.php:485
+#: includes/class-ocws-wolt-api.php:504
 msgid "Wolt API URL or Merchant ID not configured."
 msgstr ""
 
-#: includes/class-ocws-wolt-api.php:428
+#: includes/class-ocws-wolt-api.php:451
 msgid "callback_url and client_secret are required."
 msgstr ""
 
-#: includes/class-ocws-wolt-delivery-trigger.php:129
+#: includes/class-ocws-wolt-delivery-trigger.php:135
 msgid "Wolt API not configured."
 msgstr ""
 
-#: includes/class-ocws-wolt-delivery-trigger.php:147
+#: includes/class-ocws-wolt-delivery-trigger.php:153
 msgid "Wolt delivery already exists for this order."
 msgstr ""
 
 #. translators: 1: delivery id, 2: tracking url
-#: includes/class-ocws-wolt-delivery-trigger.php:184
+#: includes/class-ocws-wolt-delivery-trigger.php:198
 msgid "Wolt: Shipment created. Delivery ID: %1$s. Tracking: %2$s"
 msgstr ""
 
-#: includes/class-ocws-wolt-delivery-trigger.php:186
+#: includes/class-ocws-wolt-delivery-trigger.php:200
 msgid "N/A"
 msgstr ""
 
 #. translators: %s: error message
-#: includes/class-ocws-wolt-delivery-trigger.php:196
+#: includes/class-ocws-wolt-delivery-trigger.php:210
 msgid "Wolt: Shipment creation failed. %s"
 msgstr ""
 
 #. translators: %s: WC order number
-#: includes/class-ocws-wolt-delivery-trigger.php:376
+#: includes/class-ocws-wolt-delivery-trigger.php:408
 msgid "Order #%s"
 msgstr ""
 
 #. translators: %s: floor number / label
-#: includes/class-ocws-wolt-delivery-trigger.php:411
+#: includes/class-ocws-wolt-delivery-trigger.php:447
 msgid "Floor: %s"
 msgstr ""
 
 #. translators: %s: apartment number / label
-#: includes/class-ocws-wolt-delivery-trigger.php:415
+#: includes/class-ocws-wolt-delivery-trigger.php:451
 msgid "Apartment: %s"
 msgstr ""
 
 #. translators: %s: building entry / door code
-#: includes/class-ocws-wolt-delivery-trigger.php:419
+#: includes/class-ocws-wolt-delivery-trigger.php:455
 msgid "Door code: %s"
 msgstr ""
 
-#: includes/class-ocws-wolt-delivery-trigger.php:422
+#: includes/class-ocws-wolt-delivery-trigger.php:458
 msgid "Leave at the door"
 msgstr ""
 
@@ -661,51 +762,71 @@ msgstr ""
 msgid "Track your delivery"
 msgstr ""
 
-#: includes/class-ocws-wolt-order-meta-box.php:72
+#: includes/class-ocws-wolt-order-meta-box.php:77
 msgid "Internal status"
 msgstr ""
 
-#: includes/class-ocws-wolt-order-meta-box.php:74
+#: includes/class-ocws-wolt-order-meta-box.php:79
 msgid "Wolt status"
 msgstr ""
 
-#: includes/class-ocws-wolt-order-meta-box.php:77
+#: includes/class-ocws-wolt-order-meta-box.php:82
 msgid "Courier ETA at venue"
 msgstr ""
 
-#: includes/class-ocws-wolt-order-meta-box.php:80
+#: includes/class-ocws-wolt-order-meta-box.php:85
 msgid "Delivery ETA"
 msgstr ""
 
-#: includes/class-ocws-wolt-order-meta-box.php:86
+#: includes/class-ocws-wolt-order-meta-box.php:91
 msgid "Wolt cost"
 msgstr ""
 
-#: includes/class-ocws-wolt-order-meta-box.php:89
-msgid "Delivery ID"
-msgstr ""
-
-#: includes/class-ocws-wolt-order-meta-box.php:92
-msgid "Tracking"
-msgstr ""
-
-#: includes/class-ocws-wolt-order-meta-box.php:92
-msgid "View tracking"
-msgstr ""
-
-#: includes/class-ocws-wolt-order-meta-box.php:95
-msgid "Last error"
-msgstr ""
-
-#: includes/class-ocws-wolt-order-meta-box.php:98
-msgid "No Wolt shipment for this order yet."
+#: includes/class-ocws-wolt-order-meta-box.php:94
+msgid "Pickup venue (Wolt label)"
 msgstr ""
 
 #: includes/class-ocws-wolt-order-meta-box.php:106
+msgid "Courier"
+msgstr ""
+
+#: includes/class-ocws-wolt-order-meta-box.php:112
+msgid "View on map"
+msgstr ""
+
+#: includes/class-ocws-wolt-order-meta-box.php:125
+msgid "Link"
+msgstr ""
+
+#: includes/class-ocws-wolt-order-meta-box.php:128
+msgid "Wolt customer support"
+msgstr ""
+
+#: includes/class-ocws-wolt-order-meta-box.php:132
+msgid "Delivery ID"
+msgstr ""
+
+#: includes/class-ocws-wolt-order-meta-box.php:135
+msgid "Tracking"
+msgstr ""
+
+#: includes/class-ocws-wolt-order-meta-box.php:135
+msgid "View tracking"
+msgstr ""
+
+#: includes/class-ocws-wolt-order-meta-box.php:138
+msgid "Last error"
+msgstr ""
+
+#: includes/class-ocws-wolt-order-meta-box.php:141
+msgid "No Wolt shipment for this order yet."
+msgstr ""
+
+#: includes/class-ocws-wolt-order-meta-box.php:149
 msgid "Create Wolt delivery now"
 msgstr ""
 
-#: includes/class-ocws-wolt-order-meta-box.php:116
+#: includes/class-ocws-wolt-order-meta-box.php:159
 msgid "You do not have permission to perform this action."
 msgstr ""
 

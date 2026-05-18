@@ -31,6 +31,10 @@ class OCWS_Wolt_Settings {
 	const OPTION_WEBHOOK_ID         = 'ocws_wolt_webhook_id';
 	const OPTION_CURRENCY           = 'ocws_wolt_currency';
 	const OPTION_METHOD_ID_PREFIX   = 'ocws_wolt_method_id_prefix';
+	const OPTION_LANGUAGE           = 'ocws_wolt_language';            // ISO 639-1 2-letter; '' = auto from determine_locale()
+	const OPTION_MIN_PREP_TIME      = 'ocws_wolt_min_preparation_time';// minutes — pickup.options.min_preparation_time_minutes
+	const OPTION_AGE_CHECK_18       = 'ocws_wolt_age_check_18';        // global flag — every parcel gets dropoff_restrictions
+	const OPTION_SUBSCRIBE_LOCATION = 'ocws_wolt_subscribe_location';  // opt-in to high-volume courier location webhook
 
 	const SETTINGS_GROUP            = 'ocws_wolt_settings';
 	const SETTINGS_GROUP_WEBHOOK    = 'ocws_wolt_webhook_settings';
@@ -65,6 +69,10 @@ class OCWS_Wolt_Settings {
 			self::OPTION_MERCHANT_ID      => array( 'sanitize' => 'sanitize_text_field',                       'default' => '' ),
 			self::OPTION_CURRENCY         => array( 'sanitize' => array( __CLASS__, 'sanitize_currency' ),     'default' => 'ILS' ),
 			self::OPTION_METHOD_ID_PREFIX => array( 'sanitize' => 'sanitize_text_field',                       'default' => self::DEFAULT_METHOD_ID_PREFIX ),
+			self::OPTION_LANGUAGE        => array( 'sanitize' => array( __CLASS__, 'sanitize_language' ),       'default' => '' ),
+			self::OPTION_MIN_PREP_TIME   => array( 'sanitize' => 'absint',                                      'default' => '30' ),
+			self::OPTION_AGE_CHECK_18    => array( 'sanitize' => array( __CLASS__, 'sanitize_bool' ),           'default' => '' ),
+			self::OPTION_SUBSCRIBE_LOCATION => array( 'sanitize' => array( __CLASS__, 'sanitize_bool' ),        'default' => '' ),
 		);
 		foreach ( $main_schema as $option => $spec ) {
 			register_setting(
@@ -104,6 +112,14 @@ class OCWS_Wolt_Settings {
 	public static function sanitize_currency( $value ) {
 		$value = strtoupper( substr( preg_replace( '/[^A-Za-z]/', '', (string) $value ), 0, 3 ) );
 		return '' === $value ? 'ILS' : $value;
+	}
+
+	/**
+	 * ISO 639-1 — two lowercase letters, or empty (= auto).
+	 */
+	public static function sanitize_language( $value ) {
+		$v = strtolower( preg_replace( '/[^A-Za-z]/', '', (string) $value ) );
+		return strlen( $v ) === 2 ? substr( $v, 0, 2 ) : '';
 	}
 
 	/* ─── Getters ─────────────────────────────────────────────────── */
@@ -630,6 +646,36 @@ class OCWS_Wolt_Settings {
 
 	public static function clear_webhook_id() {
 		delete_option( self::OPTION_WEBHOOK_ID );
+	}
+
+	/**
+	 * Wolt tracking language (ISO 639-1). Empty option → auto-detect from the
+	 * site locale; falls back to "en" when no two-letter prefix is available.
+	 */
+	public static function get_language() {
+		$opt = trim( (string) get_option( self::OPTION_LANGUAGE, '' ) );
+		if ( '' !== $opt && 2 === strlen( $opt ) ) {
+			return strtolower( $opt );
+		}
+		$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+		$two    = strtolower( substr( (string) $locale, 0, 2 ) );
+		return '' === $two ? 'en' : $two;
+	}
+
+	/**
+	 * Minutes the venue needs to prepare an order before pickup.
+	 * Sent as pickup.options.min_preparation_time_minutes.
+	 */
+	public static function get_min_preparation_time() {
+		return max( 0, (int) get_option( self::OPTION_MIN_PREP_TIME, 30 ) );
+	}
+
+	public static function is_age_check_18_enabled() {
+		return '1' === (string) get_option( self::OPTION_AGE_CHECK_18, '' );
+	}
+
+	public static function is_location_subscription_enabled() {
+		return '1' === (string) get_option( self::OPTION_SUBSCRIBE_LOCATION, '' );
 	}
 
 	public static function get_currency() {

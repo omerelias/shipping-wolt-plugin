@@ -121,11 +121,37 @@ class OCWS_Wolt_Webhook {
 			$event_type ?: ( $status ?: __( 'update', 'oc-wolt-drive' ) ),
 			$message ?: ''
 		);
-		$order->add_order_note( trim( $note ) );
-		if ( $status ) {
+		// `order.location_updated` events are noisy (every few seconds) — only
+		// refresh the courier coordinates, skip the order note and the
+		// "status changed" message.
+		$is_location_event = 'order.location_updated' === $event_type;
+
+		if ( ! $is_location_event ) {
+			$order->add_order_note( trim( $note ) );
+		}
+		if ( $status && ! $is_location_event ) {
 			$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS, $status );
 		}
 		$order->update_meta_data( '_ocws_wolt_last_event_at', current_time( 'mysql' ) );
+
+		// Courier location: lat/lon at details.courier_location (Wolt uses
+		// `lon`, not `lng`, in this payload).
+		if ( isset( $details['courier_location']['lat'], $details['courier_location']['lon'] )
+			&& is_numeric( $details['courier_location']['lat'] )
+			&& is_numeric( $details['courier_location']['lon'] ) ) {
+			$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_COURIER_LAT, (float) $details['courier_location']['lat'] );
+			$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_COURIER_LNG, (float) $details['courier_location']['lon'] );
+			$order->update_meta_data( OCWS_Wolt_Delivery_Trigger::META_COURIER_AT,  current_time( 'mysql' ) );
+		}
+
+		// Courier identity (id + vehicle_type) — usually surfaces from
+		// order.pickup_started onwards.
+		if ( isset( $details['courier'] ) && is_array( $details['courier'] ) && ! empty( $details['courier'] ) ) {
+			$order->update_meta_data(
+				OCWS_Wolt_Delivery_Trigger::META_COURIER_INFO,
+				wp_json_encode( $details['courier'], JSON_UNESCAPED_UNICODE )
+			);
+		}
 
 		// Refresh ETAs / price / delivered_at from event details when present.
 		if ( isset( $details['pickup']['eta'] ) && '' !== $details['pickup']['eta'] ) {

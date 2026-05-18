@@ -333,6 +333,11 @@ class OCWS_Wolt_Api {
 			$cost_currency = isset( $raw['price']['currency'] ) ? (string) $raw['price']['currency'] : '';
 		}
 
+		// Pickup display name (Wolt's own label for the venue) + customer_support
+		// (their support contact for this specific delivery).
+		$pickup_display_name = isset( $raw['pickup']['display_name'] ) ? (string) $raw['pickup']['display_name'] : '';
+		$customer_support    = isset( $raw['customer_support'] ) && is_array( $raw['customer_support'] ) ? $raw['customer_support'] : array();
+
 		return array(
 			'success'                 => true,
 			'delivery_id'             => $delivery_id,
@@ -345,6 +350,8 @@ class OCWS_Wolt_Api {
 			'dropoff_eta_max'         => $dropoff_eta_max,
 			'cost_amount'             => $cost_amount,
 			'cost_currency'           => $cost_currency,
+			'pickup_display_name'     => $pickup_display_name,
+			'customer_support'        => $customer_support,
 			'raw'                     => $raw,
 		);
 	}

@@ -199,6 +199,49 @@
 		buildCancelDialog( $( this ).data( 'orderId' ) );
 	} );
 
+	/* ─── Courier location modal ──────────────────────────────── */
+
+	$( document ).on( 'click', '.ocws-wolt-btn-location', function ( e ) {
+		e.preventDefault();
+		var $btn  = $( this );
+		var lat   = parseFloat( $btn.data( 'lat' ) );
+		var lng   = parseFloat( $btn.data( 'lng' ) );
+		var at    = $btn.data( 'at' ) || '';
+		var order = $btn.data( 'order' ) || '';
+
+		if ( isNaN( lat ) || isNaN( lng ) ) {
+			return;
+		}
+
+		// Google Maps embed — no API key needed for the public ?q= URL.
+		var mapsEmbed = 'https://www.google.com/maps?q=' + lat + ',' + lng + '&z=16&output=embed';
+		var mapsOpen  = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+
+		var $overlay = $( '<div class="ocws-wolt-modal-overlay" />' );
+		var $modal   = $( '<div class="ocws-wolt-modal ocws-wolt-map-modal" />' );
+		var title    = ( order ? '#' + order + ' · ' : '' ) + OCWSWolt.i18n.courierLocation;
+		$modal.append( $( '<h3 />' ).text( title ) );
+		if ( at ) {
+			$modal.append( $( '<p class="ocws-wolt-map-updated" />' ).text( OCWSWolt.i18n.lastUpdated + ' ' + at ) );
+		}
+		$modal.append( $( '<iframe class="ocws-wolt-map-iframe" frameborder="0" loading="lazy" />' ).attr( 'src', mapsEmbed ) );
+
+		var $actions = $( '<div class="ocws-wolt-modal-actions" />' );
+		$actions.append(
+			$( '<a class="button" target="_blank" rel="noopener" />' ).attr( 'href', mapsOpen ).text( OCWSWolt.i18n.openInMaps ),
+			$( '<button type="button" class="button button-primary" />' ).text( OCWSWolt.i18n.close )
+		);
+		$modal.append( $actions );
+		$overlay.append( $modal );
+		$( 'body' ).append( $overlay );
+
+		function close() { $overlay.remove(); }
+		$actions.find( '.button-primary' ).on( 'click', close );
+		$overlay.on( 'click', function ( evt ) {
+			if ( evt.target === $overlay[0] ) { close(); }
+		} );
+	} );
+
 	/* ─── Quote simulator ─────────────────────────────────────── */
 
 	$( '#ocws-wolt-sim-form' ).on( 'submit', function ( e ) {
