@@ -838,7 +838,7 @@ class OCWS_Wolt_Admin {
 				<?php endif; ?>
 			</td>
 			<td class="ocws-wolt-col-address">
-				<?php echo esc_html( $order->get_formatted_shipping_address() ?: $order->get_formatted_billing_address() ); ?>
+				<?php echo esc_html( $order->get_billing_address_1() ?: $order->get_formatted_billing_address() ); ?>
 			</td>
 			<td class="ocws-wolt-col-status">
 				<span class="ocws-wolt-pill <?php echo esc_attr( $pill_class ); ?>"><?php echo esc_html( $display_status ); ?></span>
