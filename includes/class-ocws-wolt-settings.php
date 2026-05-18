@@ -169,6 +169,292 @@ class OCWS_Wolt_Settings {
 	}
 
 	/**
+	 * OC Advanced Shipping: per-group flag to skip Wolt shipment-promise at checkout (ocws_group{n}_wolt_disable_price_override).
+	 *
+	 * @param int $group_id Shipping group id (from package destination / order meta).
+	 * @return bool True when this group must keep the host plugin rate (no Wolt quote override).
+	 */
+	public static function is_wolt_price_override_disabled_for_group( $group_id ) {
+		$group_id = absint( $group_id );
+		if ( $group_id < 1 ) {
+			return false;
+		}
+		return '1' === get_option( 'ocws_group' . $group_id . '_wolt_disable_price_override', '' );
+	}
+
+	/**
+	 * Merge OC checkout context (session + POST + customer) into WC package destination.
+	 * WooCommerce sometimes passes an empty destination to package_rates while OC stores
+	 * city/street in session (chosen_*) or in update_order_review post_data.
+	 *
+	 * @param array $destination Raw $package['destination'].
+	 * @return array
+	 */
+	public static function merge_oc_checkout_destination( $destination ) {
+		if ( ! is_array( $destination ) ) {
+			$destination = array();
+		}
+
+		if ( function_exists( 'WC' ) && WC()->session ) {
+			$s = WC()->session;
+			if ( empty( $destination['city_code'] ) ) {
+				$v = $s->get( 'chosen_city_code', '' );
+				if ( is_string( $v ) && '' !== $v ) {
+					$destination['city_code'] = wc_clean( wp_unslash( $v ) );
+				}
+			}
+			if ( empty( $destination['city_name'] ) ) {
+				$v = $s->get( 'chosen_city_name', '' );
+				if ( is_string( $v ) && '' !== $v ) {
+					$destination['city_name'] = wc_clean( wp_unslash( $v ) );
+				}
+			}
+			if ( empty( $destination['city'] ) ) {
+				$v = $s->get( 'chosen_shipping_city', '' );
+				if ( null !== $v && '' !== $v && '0' !== $v ) {
+					$destination['city'] = $v;
+				}
+			}
+			if ( empty( $destination['street'] ) ) {
+				$v = $s->get( 'chosen_street', '' );
+				if ( is_string( $v ) && '' !== $v ) {
+					$destination['street'] = wc_clean( wp_unslash( $v ) );
+				}
+			}
+			if ( empty( $destination['house_num'] ) ) {
+				$v = $s->get( 'chosen_house_num', '' );
+				if ( is_string( $v ) && '' !== $v ) {
+					$destination['house_num'] = wc_clean( wp_unslash( $v ) );
+				}
+			}
+			if ( empty( $destination['address_coords'] ) || ! is_array( $destination['address_coords'] ) ) {
+				$raw = $s->get( 'chosen_address_coords', '' );
+				if ( is_string( $raw ) && '' !== $raw ) {
+					$parsed = self::parse_oc_address_coords_string( $raw );
+					if ( null !== $parsed ) {
+						$destination['address_coords'] = $parsed;
+					}
+				}
+			}
+		}
+
+		$post_data = array();
+		if ( isset( $_POST['post_data'] ) && is_string( $_POST['post_data'] ) ) {
+			parse_str( wp_unslash( $_POST['post_data'] ), $post_data );
+		} elseif ( ! empty( $_POST ) && is_array( $_POST ) ) {
+			$post_data = wp_unslash( $_POST );
+		}
+
+		$ship_diff = ! empty( $post_data['ship_to_different_address'] );
+
+		if ( empty( $destination['city_code'] ) && ! empty( $post_data['billing_city_code'] ) && ! $ship_diff ) {
+			$destination['city_code'] = wc_clean( (string) $post_data['billing_city_code'] );
+		}
+		if ( $ship_diff && empty( $destination['city_code'] ) && ! empty( $post_data['shipping_city_code'] ) ) {
+			$destination['city_code'] = wc_clean( (string) $post_data['shipping_city_code'] );
+		}
+		if ( ! $ship_diff ) {
+			if ( empty( $destination['city_name'] ) && ! empty( $post_data['billing_city_name'] ) ) {
+				$destination['city_name'] = wc_clean( (string) $post_data['billing_city_name'] );
+			}
+			if ( empty( $destination['city'] ) && ! empty( $post_data['billing_city'] ) ) {
+				$destination['city'] = wc_clean( (string) $post_data['billing_city'] );
+			}
+			if ( empty( $destination['street'] ) && ! empty( $post_data['billing_street'] ) ) {
+				$destination['street'] = wc_clean( (string) $post_data['billing_street'] );
+			}
+			if ( empty( $destination['house_num'] ) && ! empty( $post_data['billing_house_num'] ) ) {
+				$destination['house_num'] = wc_clean( (string) $post_data['billing_house_num'] );
+			}
+			if ( ( empty( $destination['address_coords'] ) || ! is_array( $destination['address_coords'] ) ) && ! empty( $post_data['billing_address_coords'] ) ) {
+				$parsed = self::parse_oc_address_coords_string( (string) $post_data['billing_address_coords'] );
+				if ( null !== $parsed ) {
+					$destination['address_coords'] = $parsed;
+				}
+			}
+			if ( empty( $destination['postcode'] ) && ! empty( $post_data['billing_postcode'] ) ) {
+				$destination['postcode'] = wc_clean( (string) $post_data['billing_postcode'] );
+			}
+		} else {
+			if ( empty( $destination['city_name'] ) && ! empty( $post_data['shipping_city_name'] ) ) {
+				$destination['city_name'] = wc_clean( (string) $post_data['shipping_city_name'] );
+			}
+			if ( empty( $destination['city'] ) && ! empty( $post_data['shipping_city'] ) ) {
+				$destination['city'] = wc_clean( (string) $post_data['shipping_city'] );
+			}
+			if ( empty( $destination['street'] ) && ! empty( $post_data['shipping_street'] ) ) {
+				$destination['street'] = wc_clean( (string) $post_data['shipping_street'] );
+			}
+			if ( empty( $destination['house_num'] ) && ! empty( $post_data['shipping_house_num'] ) ) {
+				$destination['house_num'] = wc_clean( (string) $post_data['shipping_house_num'] );
+			}
+			if ( empty( $destination['postcode'] ) && ! empty( $post_data['shipping_postcode'] ) ) {
+				$destination['postcode'] = wc_clean( (string) $post_data['shipping_postcode'] );
+			}
+		}
+
+		/*
+		 * WC_Checkout::get_value() — נתוני צ'קאאוט שכבר נטענו ל־checkout מהסשן/פוסט.
+		 * לפעמים $package['destination'] עדיין ברירת־מחדל ריקה בעוד שהטופס כבר מולא.
+		 */
+		if ( function_exists( 'WC' ) && WC()->checkout() instanceof \WC_Checkout ) {
+			$chk             = WC()->checkout();
+			$use_shipping_addr = $ship_diff || (bool) $chk->get_value( 'ship_to_different_address' );
+			if ( ! $use_shipping_addr ) {
+				if ( empty( $destination['city_code'] ) ) {
+					$v = $chk->get_value( 'billing_city_code' );
+					if ( $v ) {
+						$destination['city_code'] = wc_clean( (string) $v );
+					}
+				}
+				if ( empty( $destination['city_name'] ) ) {
+					$v = $chk->get_value( 'billing_city_name' );
+					if ( $v ) {
+						$destination['city_name'] = wc_clean( (string) $v );
+					}
+				}
+				if ( empty( $destination['city'] ) ) {
+					$v = $chk->get_value( 'billing_city' );
+					if ( $v ) {
+						$destination['city'] = wc_clean( (string) $v );
+					}
+				}
+				if ( empty( $destination['street'] ) ) {
+					$v = $chk->get_value( 'billing_street' );
+					if ( $v ) {
+						$destination['street'] = wc_clean( (string) $v );
+					}
+				}
+				if ( empty( $destination['house_num'] ) ) {
+					$v = $chk->get_value( 'billing_house_num' );
+					if ( $v ) {
+						$destination['house_num'] = wc_clean( (string) $v );
+					}
+				}
+				if ( ( empty( $destination['address_coords'] ) || ! is_array( $destination['address_coords'] ) ) ) {
+					$v = $chk->get_value( 'billing_address_coords' );
+					if ( $v ) {
+						$parsed = self::parse_oc_address_coords_string( (string) $v );
+						if ( null !== $parsed ) {
+							$destination['address_coords'] = $parsed;
+						}
+					}
+				}
+			} else {
+				if ( empty( $destination['city_code'] ) ) {
+					$v = $chk->get_value( 'shipping_city_code' );
+					if ( $v ) {
+						$destination['city_code'] = wc_clean( (string) $v );
+					}
+				}
+				if ( empty( $destination['city_name'] ) ) {
+					$v = $chk->get_value( 'shipping_city_name' );
+					if ( $v ) {
+						$destination['city_name'] = wc_clean( (string) $v );
+					}
+				}
+				if ( empty( $destination['city'] ) ) {
+					$v = $chk->get_value( 'shipping_city' );
+					if ( $v ) {
+						$destination['city'] = wc_clean( (string) $v );
+					}
+				}
+				if ( empty( $destination['street'] ) ) {
+					$v = $chk->get_value( 'shipping_street' );
+					if ( $v ) {
+						$destination['street'] = wc_clean( (string) $v );
+					}
+				}
+				if ( empty( $destination['house_num'] ) ) {
+					$v = $chk->get_value( 'shipping_house_num' );
+					if ( $v ) {
+						$destination['house_num'] = wc_clean( (string) $v );
+					}
+				}
+			}
+		}
+
+		if ( function_exists( 'WC' ) && WC()->customer ) {
+			$c = WC()->customer;
+			if ( empty( $destination['city'] ) ) {
+				$ship_city = $c->get_shipping_city();
+				$bill_city = $c->get_billing_city();
+				if ( $ship_city ) {
+					$destination['city'] = $ship_city;
+				} elseif ( $bill_city ) {
+					$destination['city'] = $bill_city;
+				}
+			}
+		}
+
+		if ( empty( $destination['city'] ) && ! empty( $destination['city_name'] ) ) {
+			$destination['city'] = $destination['city_name'];
+		}
+
+		return $destination;
+	}
+
+	/**
+	 * Parse OC-style coordinate string "(lat, lng)" or "lat, lng" into WC destination shape.
+	 *
+	 * @param string $raw Raw coords from session or POST.
+	 * @return array{lat: float, lng: float}|null
+	 */
+	protected static function parse_oc_address_coords_string( $raw ) {
+		if ( '' === (string) $raw ) {
+			return null;
+		}
+		$coords = wc_clean( wp_unslash( (string) $raw ) );
+		$coords = str_replace( array( '(', ')', ' ' ), '', $coords );
+		$coords = explode( ',', $coords, 2 );
+		if ( isset( $coords[0], $coords[1] ) && is_numeric( $coords[0] ) && is_numeric( $coords[1] ) ) {
+			return array(
+				'lat' => (float) $coords[0],
+				'lng' => (float) $coords[1],
+			);
+		}
+		return null;
+	}
+
+	/**
+	 * Whether OC Advanced Shipping DB tables exist (install/activation completed).
+	 * Without `oc_woo_shipping_locations`, `ocws_get_group_id_by_city()` cannot resolve a group.
+	 *
+	 * @return bool
+	 */
+	public static function is_oc_shipping_locations_table_present() {
+		global $wpdb;
+		static $cached = null;
+		if ( null !== $cached ) {
+			return $cached;
+		}
+		$table  = $wpdb->prefix . 'oc_woo_shipping_locations';
+		$cached = ( $table === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) );
+		return $cached;
+	}
+
+	/**
+	 * Resolve group id when `oc_woo_shipping_locations.gm_place_id` stores the Google Place ID (e.g. ChIJ...).
+	 *
+	 * Polygon rows often use an internal hash as `location_code`; matching only works by coords unless `gm_place_id` is filled.
+	 *
+	 * @param string $place_id Place id from checkout (city_code / city may carry it).
+	 * @return int 0 when unknown.
+	 */
+	protected static function get_oc_group_id_by_gm_place_id( $place_id ) {
+		$place_id = is_string( $place_id ) ? trim( $place_id ) : '';
+		if ( '' === $place_id || ! self::is_oc_shipping_locations_table_present() ) {
+			return 0;
+		}
+		global $wpdb;
+		$gid = $wpdb->get_var( $wpdb->prepare(
+			"SELECT group_id FROM {$wpdb->prefix}oc_woo_shipping_locations WHERE gm_place_id = %s LIMIT 1",
+			$place_id
+		) );
+		return $gid ? (int) $gid : 0;
+	}
+
+	/**
 	 * Resolve OC shipping group id from a WC package destination (checkout).
 	 *
 	 * @param array $destination Package destination.
@@ -181,18 +467,76 @@ class OCWS_Wolt_Settings {
 		if ( ! empty( $destination['ocws_shipping_group'] ) ) {
 			return absint( $destination['ocws_shipping_group'] );
 		}
-		if ( function_exists( 'ocws_get_group_id_by_city' ) ) {
-			if ( ! empty( $destination['city_code'] ) ) {
-				$g = ocws_get_group_id_by_city( $destination['city_code'] );
-				if ( $g ) {
-					return (int) $g;
+
+		$table_ok = self::is_oc_shipping_locations_table_present();
+
+		// Polygon zones: point-in-polygon → internal location_code (hash) → group (not resolvable by Place ID alone).
+		if ( $table_ok && class_exists( 'OC_Woo_Shipping_Polygon' ) && is_callable( array( 'OC_Woo_Shipping_Polygon', 'find_matching_polygon' ) ) && function_exists( 'ocws_get_group_id_by_city' ) ) {
+			$lat = null;
+			$lng = null;
+			if ( ! empty( $destination['address_coords'] ) && is_array( $destination['address_coords'] ) ) {
+				if ( isset( $destination['address_coords']['lat'], $destination['address_coords']['lng'] )
+					&& '' !== (string) $destination['address_coords']['lat']
+					&& '' !== (string) $destination['address_coords']['lng'] ) {
+					$lat = (float) $destination['address_coords']['lat'];
+					$lng = (float) $destination['address_coords']['lng'];
 				}
 			}
-			if ( ! empty( $destination['city'] ) ) {
-				$g = ocws_get_group_id_by_city( $destination['city'] );
-				if ( $g ) {
-					return (int) $g;
+			if ( null !== $lat && null !== $lng ) {
+				$poly_code = OC_Woo_Shipping_Polygon::find_matching_polygon( $lat, $lng );
+				if ( $poly_code ) {
+					$g = ocws_get_group_id_by_city( $poly_code );
+					if ( $g ) {
+						return (int) $g;
+					}
 				}
+			}
+		}
+
+		if ( $table_ok ) {
+			$place_candidate = '';
+			if ( ! empty( $destination['city_code'] ) && is_string( $destination['city_code'] ) ) {
+				$c = trim( $destination['city_code'] );
+				if ( 0 === strpos( $c, 'ChIJ' ) ) {
+					$place_candidate = $c;
+				}
+			}
+			if ( '' === $place_candidate && ! empty( $destination['city'] ) && is_string( $destination['city'] ) ) {
+				$c = trim( (string) $destination['city'] );
+				if ( 0 === strpos( $c, 'ChIJ' ) ) {
+					$place_candidate = $c;
+				}
+			}
+			if ( '' !== $place_candidate ) {
+				$g = self::get_oc_group_id_by_gm_place_id( $place_candidate );
+				if ( $g ) {
+					return $g;
+				}
+			}
+		}
+
+		if ( ! function_exists( 'ocws_get_group_id_by_city' ) ) {
+			return 0;
+		}
+		$can_lookup_location = $table_ok;
+		if ( ! empty( $destination['city_code'] ) && $can_lookup_location ) {
+			$code = $destination['city_code'];
+			$g    = ocws_get_group_id_by_city( $code );
+
+			if ( ! $g && class_exists( 'OC_Woo_Shipping_Polygon' ) && is_callable( array( 'OC_Woo_Shipping_Polygon', 'find_matching_gm_city' ) ) ) {
+				$mapped = OC_Woo_Shipping_Polygon::find_matching_gm_city( $code );
+				if ( $mapped ) {
+					$g = ocws_get_group_id_by_city( $mapped );
+				}
+			}
+			if ( $g ) {
+				return (int) $g;
+			}
+		}
+		if ( ! empty( $destination['city'] ) && $can_lookup_location ) {
+			$g = ocws_get_group_id_by_city( $destination['city'] );
+			if ( $g ) {
+				return (int) $g;
 			}
 		}
 		return 0;
@@ -211,6 +555,24 @@ class OCWS_Wolt_Settings {
 		$gid = absint( $order->get_meta( 'ocws_shipping_group' ) );
 		if ( $gid ) {
 			return $gid;
+		}
+		if ( ! self::is_oc_shipping_locations_table_present() ) {
+			return 0;
+		}
+		if ( function_exists( 'ocws_get_group_id_by_city' ) && class_exists( 'OC_Woo_Shipping_Polygon' ) && is_callable( array( 'OC_Woo_Shipping_Polygon', 'find_matching_polygon' ) ) ) {
+			$raw_coords = (string) $order->get_meta( '_billing_address_coords' );
+			if ( '' !== $raw_coords ) {
+				$parsed = self::parse_oc_address_coords_string( $raw_coords );
+				if ( $parsed && isset( $parsed['lat'], $parsed['lng'] ) ) {
+					$poly_code = OC_Woo_Shipping_Polygon::find_matching_polygon( (float) $parsed['lat'], (float) $parsed['lng'] );
+					if ( $poly_code ) {
+						$g = ocws_get_group_id_by_city( $poly_code );
+						if ( $g ) {
+							return (int) $g;
+						}
+					}
+				}
+			}
 		}
 		if ( ! function_exists( 'ocws_get_group_id_by_city' ) ) {
 			return 0;
@@ -233,7 +595,20 @@ class OCWS_Wolt_Settings {
 		if ( ! $code ) {
 			return 0;
 		}
+		$code_str = trim( (string) $code );
+		if ( '' !== $code_str && 0 === strpos( $code_str, 'ChIJ' ) ) {
+			$g = self::get_oc_group_id_by_gm_place_id( $code_str );
+			if ( $g ) {
+				return $g;
+			}
+		}
 		$g = ocws_get_group_id_by_city( $code );
+		if ( ! $g && class_exists( 'OC_Woo_Shipping_Polygon' ) && is_callable( array( 'OC_Woo_Shipping_Polygon', 'find_matching_gm_city' ) ) ) {
+			$mapped = OC_Woo_Shipping_Polygon::find_matching_gm_city( $code );
+			if ( $mapped ) {
+				$g = ocws_get_group_id_by_city( $mapped );
+			}
+		}
 		return $g ? (int) $g : 0;
 	}
 

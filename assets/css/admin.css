@@ -318,6 +318,145 @@
 
 .ocws-wolt-error { color: #B91C1C; }
 
+/* ─── Tools tab (quote simulator) ──────────────────────────────── */
+
+.ocws-wolt-tools-lead {
+	margin: 0 0 22px;
+	max-width: 52rem;
+	font-size: 14px;
+	line-height: 1.55;
+	color: var(--ocws-wolt-ink);
+}
+
+.ocws-wolt-tools-section {
+	margin: 0 0 18px;
+	padding: 18px 20px;
+	background: var(--ocws-wolt-bg);
+	border: 1px solid var(--ocws-wolt-line);
+	border-radius: 10px; 
+}
+
+.ocws-wolt-tools-section:last-of-type {
+	margin-bottom: 0;
+}
+
+.ocws-wolt-tools-section-title {
+	margin: 0 0 8px;
+	padding: 0;
+	border: none;
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--ocws-wolt-ink);
+	letter-spacing: -0.01em;
+}
+
+.ocws-wolt-tools-section .ocws-wolt-tools-section-desc {
+	margin-top: 0;
+	margin-bottom: 16px;
+}
+
+.ocws-wolt-tools-field {
+	margin-bottom: 14px;
+}
+
+.ocws-wolt-tools-field:last-child {
+	margin-bottom: 0;
+}
+
+.ocws-wolt-tools-field-full .regular-text {
+	width: 100%;
+	max-width: 100%;
+}
+
+.ocws-wolt-tools-label {
+	display: block;
+	font-weight: 600;
+	font-size: 13px;
+	margin-bottom: 6px;
+	color: var(--ocws-wolt-ink);
+}
+
+.ocws-wolt-tools-row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px 22px;
+	align-items: end;
+}
+
+@media (max-width: 600px) {
+	.ocws-wolt-tools-row {
+		grid-template-columns: 1fr;
+	}
+}
+
+.ocws-wolt-tools-actions {
+	margin-top: 22px;
+	padding-top: 20px;
+	border-top: 1px solid var(--ocws-wolt-line);
+}
+
+/* Simulator AJAX result: two clear panels */
+.ocws-wolt-result .ocws-wolt-sim-out {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+}
+
+@media (max-width: 782px) {
+	.ocws-wolt-result .ocws-wolt-sim-out {
+		grid-template-columns: 1fr;
+	}
+}
+
+.ocws-wolt-sim-panel {
+	background: #fff;
+	border: 1px solid var(--ocws-wolt-line);
+	border-radius: 10px;
+	padding: 14px 16px;
+	box-shadow: 0 1px 0 rgba(15, 26, 36, 0.04);
+}
+
+.ocws-wolt-sim-panel h3 {
+	margin: 0 0 12px;
+	padding: 0;
+	border: none;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: var(--ocws-wolt-muted);
+	font-weight: 700;
+}
+
+.ocws-wolt-sim-dl {
+	margin: 0;
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 10px 18px;
+	align-items: baseline;
+	font-size: 14px;
+}
+
+.ocws-wolt-sim-dl dt {
+	margin: 0;
+	font-weight: 600;
+	color: var(--ocws-wolt-muted);
+}
+
+.ocws-wolt-sim-dl dd {
+	margin: 0;
+	font-weight: 700;
+	color: var(--ocws-wolt-ink);
+	font-variant-numeric: tabular-nums;
+}
+
+.ocws-wolt-sim-scheduled {
+	margin: 0 0 8px;
+}
+
+.ocws-wolt-sim-scheduled + .description {
+	margin-bottom: 0;
+}
+
 /* ─── Copy button feedback ─────────────────────────────────────── */
 
 .ocws-wolt-copy.is-copied {

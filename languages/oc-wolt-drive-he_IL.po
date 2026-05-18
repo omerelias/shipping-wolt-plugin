@@ -195,7 +195,7 @@ msgstr ""
 
 #: includes/class-ocws-wolt-admin.php:249
 msgid "Dispatch offset (minutes)"
-msgstr "הקדמת איסוף (דקות)"
+msgstr "איחור המשלוח (דקות)"
 
 #: includes/class-ocws-wolt-admin.php:250
 msgid ""

@@ -119,6 +119,9 @@ class OCWS_Wolt_Api {
 	 * @return array{ success: bool, cost?: float, error?: string, raw?: array }
 	 */
 	public static function get_shipment_promise( $destination ) {
+		$destination = OCWS_Wolt_Settings::merge_oc_checkout_destination(
+			is_array( $destination ) ? $destination : array()
+		);
 		$group_id = OCWS_Wolt_Settings::resolve_group_id_from_destination( $destination );
 		$venue_id = OCWS_Wolt_Settings::get_effective_venue_id_for_group( $group_id );
 		$endpoint = self::venue_endpoint( 'shipment-promises', $venue_id );

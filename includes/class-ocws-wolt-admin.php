@@ -477,38 +477,53 @@ class OCWS_Wolt_Admin {
 	 * Render tools tab: quote simulator + scheduled time preview.
 	 */
 	protected static function render_tools_tab() {
+		$sim_default_date = function_exists( 'wp_date' ) ? wp_date( 'd/m/Y' ) : gmdate( 'd/m/Y' );
 		?>
-		<div class="ocws-wolt-card">
+		<div class="ocws-wolt-card ocws-wolt-tools-card">
 			<h2><?php esc_html_e( 'Quote simulator', 'oc-wolt-drive' ); ?></h2>
-			<p><?php esc_html_e( 'Send a test shipment-promise to Wolt and preview the scheduled dropoff time the plugin would calculate for a given slot.', 'oc-wolt-drive' ); ?></p>
+			<p class="ocws-wolt-tools-lead"><?php esc_html_e( 'See the live shipment quote from Wolt for any address. Optionally add a checkout-style time window to preview the scheduled customer dropoff time the plugin would send (slot start + your dispatch offset from Settings).', 'oc-wolt-drive' ); ?></p>
 
-			<form id="ocws-wolt-sim-form" class="ocws-wolt-form">
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row"><label for="sim_address"><?php esc_html_e( 'Address', 'oc-wolt-drive' ); ?></label></th>
-						<td><input id="sim_address" type="text" name="address" class="regular-text" placeholder="<?php esc_attr_e( 'Street, City', 'oc-wolt-drive' ); ?>" /></td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="sim_lat"><?php esc_html_e( 'Latitude', 'oc-wolt-drive' ); ?></label></th>
-						<td><input id="sim_lat" type="text" name="lat" placeholder="32.0853" class="regular-text" /></td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="sim_lng"><?php esc_html_e( 'Longitude', 'oc-wolt-drive' ); ?></label></th>
-						<td><input id="sim_lng" type="text" name="lng" placeholder="34.7818" class="regular-text" /></td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="sim_slot_date"><?php esc_html_e( 'Slot date (d/m/Y)', 'oc-wolt-drive' ); ?></label></th>
-						<td><input id="sim_slot_date" type="text" name="slot_date" placeholder="25/02/2026" class="regular-text" /></td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="sim_slot_start"><?php esc_html_e( 'Slot start (HH:MM)', 'oc-wolt-drive' ); ?></label></th>
-						<td><input id="sim_slot_start" type="text" name="slot_start" placeholder="16:00" class="regular-text" /></td>
-					</tr>
-				</table>
-				<p><button type="submit" class="button button-primary"><?php esc_html_e( 'Run simulation', 'oc-wolt-drive' ); ?></button></p>
+			<form id="ocws-wolt-sim-form" class="ocws-wolt-form ocws-wolt-tools-form">
+				<div class="ocws-wolt-tools-section">
+					<h3 class="ocws-wolt-tools-section-title"><?php esc_html_e( '1. Destination', 'oc-wolt-drive' ); ?></h3>
+					<p class="ocws-wolt-tools-section-desc description"><?php esc_html_e( 'Use a full address, coordinates, or both. Coordinates help when the address is vague or hard to geocode.', 'oc-wolt-drive' ); ?></p>
+					<div class="ocws-wolt-tools-field ocws-wolt-tools-field-full">
+						<label for="sim_address" class="ocws-wolt-tools-label"><?php esc_html_e( 'Address', 'oc-wolt-drive' ); ?></label>
+						<input id="sim_address" type="text" name="address" class="regular-text" value="<?php echo esc_attr( __( 'Dizengoff St 50, Tel Aviv-Yafo', 'oc-wolt-drive' ) ); ?>" placeholder="<?php esc_attr_e( 'Street, City', 'oc-wolt-drive' ); ?>" autocomplete="street-address" />
+					</div>
+					<div class="ocws-wolt-tools-row">
+						<div class="ocws-wolt-tools-field">
+							<label for="sim_lat" class="ocws-wolt-tools-label"><?php esc_html_e( 'Latitude (optional)', 'oc-wolt-drive' ); ?></label>
+							<input id="sim_lat" type="text" name="lat" inputmode="decimal" value="32.0853" placeholder="<?php esc_attr_e( 'e.g. 32.0853', 'oc-wolt-drive' ); ?>" class="regular-text" />
+						</div>
+						<div class="ocws-wolt-tools-field">
+							<label for="sim_lng" class="ocws-wolt-tools-label"><?php esc_html_e( 'Longitude (optional)', 'oc-wolt-drive' ); ?></label>
+							<input id="sim_lng" type="text" name="lng" inputmode="decimal" value="34.7818" placeholder="<?php esc_attr_e( 'e.g. 34.7818', 'oc-wolt-drive' ); ?>" class="regular-text" />
+						</div>
+					</div>
+				</div>
+
+				<div class="ocws-wolt-tools-section">
+					<h3 class="ocws-wolt-tools-section-title"><?php esc_html_e( '2. Delivery window (optional)', 'oc-wolt-drive' ); ?></h3>
+					<p class="ocws-wolt-tools-section-desc description"><?php esc_html_e( 'Same formats as at checkout. Leave empty to only preview pricing; the scheduled dropoff preview appears when both date and start time are valid.', 'oc-wolt-drive' ); ?></p>
+					<div class="ocws-wolt-tools-row">
+						<div class="ocws-wolt-tools-field">
+							<label for="sim_slot_date" class="ocws-wolt-tools-label"><?php esc_html_e( 'Date', 'oc-wolt-drive' ); ?></label>
+							<input id="sim_slot_date" type="text" name="slot_date" value="<?php echo esc_attr( $sim_default_date ); ?>" placeholder="<?php esc_attr_e( 'e.g. 25/02/2026 (day/month/year)', 'oc-wolt-drive' ); ?>" class="regular-text" inputmode="numeric" autocomplete="off" />
+						</div>
+						<div class="ocws-wolt-tools-field">
+							<label for="sim_slot_start" class="ocws-wolt-tools-label"><?php esc_html_e( 'Window start', 'oc-wolt-drive' ); ?></label>
+							<input id="sim_slot_start" type="text" name="slot_start" value="16:00" placeholder="<?php esc_attr_e( 'e.g. 16:00 (24-hour)', 'oc-wolt-drive' ); ?>" class="regular-text" inputmode="numeric" autocomplete="off" />
+						</div>
+					</div>
+				</div>
+
+				<div class="ocws-wolt-tools-actions">
+					<button type="submit" class="button button-primary"><?php esc_html_e( 'Run simulation', 'oc-wolt-drive' ); ?></button>
+				</div>
 			</form>
 
-			<div id="ocws-wolt-sim-result" class="ocws-wolt-result"></div>
+			<div id="ocws-wolt-sim-result" class="ocws-wolt-result" role="region" aria-live="polite" aria-label="<?php esc_attr_e( 'Simulation results', 'oc-wolt-drive' ); ?>"></div>
 		</div>
 		<?php
 	}
@@ -660,20 +675,28 @@ class OCWS_Wolt_Admin {
 			$scheduled = self::preview_scheduled_time( $slot_date, $slot_start );
 		}
 
-		$html  = '<h3>' . esc_html__( 'Shipment promise', 'oc-wolt-drive' ) . '</h3>';
+		$html  = '<div class="ocws-wolt-sim-out">';
+		$html .= '<div class="ocws-wolt-sim-panel">';
+		$html .= '<h3>' . esc_html__( 'Shipment promise', 'oc-wolt-drive' ) . '</h3>';
 		if ( ! empty( $price_result['success'] ) ) {
 			$with_markup = OCWS_Wolt_Settings::apply_markup( (float) $price_result['cost'] );
-			$html .= '<p><strong>' . esc_html__( 'Quote', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( number_format_i18n( $price_result['cost'], 2 ) ) . '</p>';
-			$html .= '<p><strong>' . esc_html__( 'With markup', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( number_format_i18n( $with_markup, 2 ) ) . '</p>';
+			$html .= '<dl class="ocws-wolt-sim-dl">';
+			$html .= '<dt>' . esc_html__( 'Wolt quote', 'oc-wolt-drive' ) . '</dt><dd>' . esc_html( number_format_i18n( $price_result['cost'], 2 ) ) . '</dd>';
+			$html .= '<dt>' . esc_html__( 'With your markup', 'oc-wolt-drive' ) . '</dt><dd>' . esc_html( number_format_i18n( $with_markup, 2 ) ) . '</dd>';
+			$html .= '</dl>';
 		} else {
-			$html .= '<p class="ocws-wolt-error">' . esc_html( isset( $price_result['error'] ) ? $price_result['error'] : 'Error' ) . '</p>';
+			$html .= '<p class="ocws-wolt-error">' . esc_html( isset( $price_result['error'] ) ? $price_result['error'] : __( 'Error', 'oc-wolt-drive' ) ) . '</p>';
 		}
+		$html .= '</div>';
+		$html .= '<div class="ocws-wolt-sim-panel">';
 		$html .= '<h3>' . esc_html__( 'Scheduled dropoff time', 'oc-wolt-drive' ) . '</h3>';
 		if ( '' !== $scheduled ) {
-			$html .= '<p><code>' . esc_html( $scheduled ) . '</code></p>';
+			$html .= '<p class="ocws-wolt-sim-scheduled"><code>' . esc_html( $scheduled ) . '</code></p>';
+			$html .= '<p class="description">' . esc_html__( 'Includes your dispatch offset from Settings.', 'oc-wolt-drive' ) . '</p>';
 		} else {
-			$html .= '<p>' . esc_html__( 'No slot provided or invalid format — delivery would be sent as ASAP.', 'oc-wolt-drive' ) . '</p>';
+			$html .= '<p class="description">' . esc_html__( 'Add a valid date and window start above, or a real order without a slot is sent as ASAP.', 'oc-wolt-drive' ) . '</p>';
 		}
+		$html .= '</div></div>';
 		wp_send_json_success( array( 'html' => $html ) );
 	}
 

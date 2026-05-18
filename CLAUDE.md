@@ -36,8 +36,13 @@ Customer at checkout
        ▼
 woocommerce_package_rates filter (priority 20)
        │
-       │  OCWS_Wolt_Price_Override::filter_package_rates()
+       │  OCWS_Wolt_Price_Override::filter_package_rates() 
        │  • Skips unless plugin enabled + API configured
+       │  • Merges sparse WC destinations with OC session/POST/checkout
+       │    (`OCWS_Wolt_Settings::merge_oc_checkout_destination`)
+       │  • Resolves OC shipping group → effective venue + pickup (per-group
+       │    options override global `ocws_wolt_*`; may skip price override
+       │    if group flag says so)
        │  • Calls Wolt /v1/venues/{venue_id}/shipment-promises
        │  • Overrides the host method's rate cost (NEVER 0s it
        │    on failure — leaves host price alone)
@@ -50,6 +55,7 @@ woocommerce_order_status_{slug} action  (NOTE: slug WITHOUT the wc- prefix)
        │
        │  OCWS_Wolt_Delivery_Trigger::on_trigger_status()
        │  • Idempotent (returns early if META_DELIVERY_ID already set)
+       │  • Uses same per-group venue + pickup resolution as quoting
        │  • Builds payload (recipient {name+phone+email}, parcels,
        │    scheduled_dropoff_time, structured dropoff.location.address)
        │  • POSTs to /v1/venues/{venue_id}/deliveries
@@ -112,6 +118,7 @@ We read them for delivery dispatch:
 | `_shipping_enter_code` / `_billing_enter_code` | Door code |
 | `_shipping_phone` | Recipient phone (the OC plugin sets this explicitly) |
 | `_shipping_address_coords` | Lat/lng JSON (sometimes string-encoded) |
+| `_billing_address_coords` | Billing lat/lng string from checkout — used for polygon → group resolution on completed orders |
 | `ocws_shipping_info_date` | Chosen delivery date in `d/m/Y` |
 | `ocws_shipping_info_slot_start` | Slot start in `HH:MM` |
 | `ocws_leave_at_the_door` | "1" if customer ticked the box |
@@ -121,6 +128,80 @@ The OC plugin populates its own keys on the `$package['destination']`
 array via filters. WC's standard `address`, `address_1`, `city`,
 `postcode` are typically blank. The `resolve_street()` / `resolve_city()`
 helpers in `OCWS_Wolt_Api` try the OC keys first, fall back to WC's.
+
+### `ocws_shipping_group` on the package destination (Delinka host fork)
+
+The OC **public** checkout hook can set `$package['destination']['ocws_shipping_group']`
+to an integer group id when `ocws_get_group_id_by_city()` finds a match from
+`city_code` / hash-like `city` (see `class-oc-woo-shipping-public.php`).
+That value is consumed first by `OCWS_Wolt_Settings::resolve_group_id_from_destination()`.
+
+Wolt Drive still runs a fuller resolver because `wc_package_rates` often fires
+with an empty destination: `merge_oc_checkout_destination()` rebuilds
+`city_code`, `city`, **`address_coords`**, etc. from session (`chosen_address_coords`),
+POST / `post_data`, `WC_Checkout::get_value`, and the customer object before
+resolving the group.
+
+### Resolving which OC shipping group an address belongs to
+
+Implemented in `OCWS_Wolt_Settings::resolve_group_id_from_destination()` /
+`resolve_group_id_from_order()` (requires `oc_woo_shipping_locations` table
+and, for most lookups, `ocws_get_group_id_by_city()` from the host plugin).
+
+Order of attempts (destination):
+
+1. **`ocws_shipping_group`** if already set on the destination array.
+2. **Polygon match** — if `address_coords.lat` / `.lng` are present, call
+   `OC_Woo_Shipping_Polygon::find_matching_polygon()`. That returns the
+   internal **`location_code` hash** stored for `location_type = polygon`
+   rows (NOT the Google Place id). Then `ocws_get_group_id_by_city( $hash )`.
+3. **Google Place id on the row** — if `city_code` or `city` is a string
+   starting with `ChIJ`, look up
+   `SELECT group_id … WHERE gm_place_id = %s` (helps when admins populate
+   `gm_place_id` even for polygon zones).
+4. **City pipeline** — `ocws_get_group_id_by_city( $code )`, then
+   `OC_Woo_Shipping_Polygon::find_matching_gm_city( $code )` remap (only
+   matches **city** locations where `location_code` equals `gm_place_id` in
+   OC's data store — not raw polygon rows).
+
+For **completed orders**, the same polygon path runs against meta
+`_billing_address_coords` (parsed with `parse_oc_address_coords_string()`), then
+Place id against `gm_place_id`, then stored city codes.
+
+**Why this matters:** Polygon zones in `oc_woo_shipping_locations` usually have
+`location_code` = opaque hash and **empty** `gm_place_id`. A lone Place id like
+`ChIJ…` cannot map to the group unless coords hit the polygon or `gm_place_id`
+is filled in the DB.
+
+### Per-group Wolt options (WordPress options, not order meta)
+
+Registered only when both plugins are active; settings group per OC group
+is `ocws_group{N}` (same pattern as other OC group options).
+
+| Option name | Purpose |
+|---|---|
+| `ocws_group{N}_wolt_venue_id` | If non-empty, replaces global `ocws_wolt_venue_id` for shipment-promises, create-delivery, and related venue-scoped calls when the order/package resolves to group **N**. |
+| `ocws_group{N}_wolt_pickup_address` | If non-empty, replaces global pickup line for that group (Hebrew line for Wolt payloads where pickup address is used). |
+| `ocws_group{N}_wolt_disable_price_override` | If `"1"`, **skip** Wolt shipment-promise at checkout for that group — the host shipping method keeps its calculated rate; create-delivery still uses the effective venue/pickup for that group unless you change that separately. |
+
+**Orchestration in Wolt Drive:** `get_effective_venue_id_for_group( $group_id )`,
+`get_effective_pickup_address_for_group( $group_id )`,
+`is_wolt_price_override_disabled_for_group( $group_id )`. Used from
+`OCWS_Wolt_Price_Override`, `OCWS_Wolt_Api::get_shipment_promise()`, and
+`OCWS_Wolt_Delivery_Trigger` / API `create_delivery(..., $venue_id)`.
+
+### Host plugin files touched (Delinka `oc-woo-shipping` fork)
+
+Keep these in sync if you port to another OC codebase version:
+
+| File | Change |
+|---|---|
+| `admin/class-oc-woo-shipping-admin.php` | `register_setting()` for the three `ocws_group{ID}_wolt_*` options per shipping group when `class_exists( 'OCWS_Wolt_Settings' )`. |
+| `admin/class-oc-woo-shipping-admin-groups.php` | Admin UI rows with class `ocws-wolt-drive-group-settings` (Hebrew labels: section title, venue, pickup address, checkout price checkbox). |
+| `public/class-oc-woo-shipping-public.php` | Populates `ocws_shipping_group` on `$packages[0]['destination']` when a simple `ocws_get_group_id_by_city` match exists from checkout POST. |
+
+`is_oc_shipping_locations_table_present()` guards DB lookups when tables were
+never created (activation not run).
 
 ---
 
@@ -235,10 +316,19 @@ grants prod credentials after staging tests pass).
   - "for the business" → `{merchant_id}` (webhook, delivery-areas)
   - "for this branch" → `{venue_id}` (promises, deliveries)
 
-Delinka has venue `קהילת סלוניקי 7, תל אביב יפו` (id stored in WP option).
-There's a second branch coming — contact Wolt's Tohar (per the original
-rep's note) for its venue id when needed. The plugin currently supports
-ONE venue id per site; multi-venue support is a future enhancement.
+**Runtime venue selection:** Global `ocws_wolt_venue_id` remains the default.
+When an order/checkout package resolves to an OC shipping group that has
+`ocws_group{N}_wolt_venue_id` set, that value becomes the effective venue for
+quotes and dispatch. Unmapped groups still use the global option — so one
+site can run multiple pickup branches without hard-coding everything in Wolt
+Drive's main settings screen.
+
+Delinka example: primary venue `קהילת סלוניקי 7, תל אביב יפו` (global option).
+Additional branches can use per-group venue IDs in OC group settings.
+
+**Future / partial:** A dedicated "venue picker" UI on the standalone Wolt
+Drive settings tab is still optional; today mapping is owned by the OC group
+editor alongside other group-level options.
 
 ---
 
@@ -316,7 +406,8 @@ shipping-wolt-plugin/
     ├── class-ocws-wolt-admin.php       ← Standalone admin page (4 tabs)
     ├── class-ocws-wolt-frontend.php    ← Customer-facing tracking card
     │                                     + tracking-link row in WC emails
-    ├── class-ocws-wolt-settings.php
+    ├── class-ocws-wolt-settings.php   ← Options + merge_oc_checkout_destination,
+    │                                     group resolution (polygon / ChIJ), effective venue & pickup
     ├── class-ocws-wolt-api.php         ← All HTTP calls to Wolt
     ├── class-ocws-wolt-price-override.php
     ├── class-ocws-wolt-delivery-trigger.php
@@ -352,6 +443,13 @@ installations migrate automatically).
 | `ocws_wolt_markup_value` | Number applied per `markup_type` |
 | `ocws_wolt_currency` | ISO 4217, default ILS, used for parcel prices |
 | `ocws_wolt_method_id_prefix` | Host shipping-method ID prefix |
+
+**Host plugin (OC group options):** When Wolt Drive is active, the OC fork also
+saves `ocws_group{N}_wolt_venue_id`, `ocws_group{N}_wolt_pickup_address`, and
+`ocws_group{N}_wolt_disable_price_override` per shipping group (settings group
+`ocws_group{N}`). Behaviour is described under **Per-group Wolt options** in
+*The host shipping plugin contract* — they are not removed by this plugin's
+`uninstall.php` (only `ocws_wolt_*` keys are).
 
 Settings are split into **two register_setting groups** because of a
 real bug: both forms (Settings tab + Webhook tab) used to POST to
@@ -467,10 +565,10 @@ Not blockers, but worth being aware of:
 - **Production credentials** — sandbox works end-to-end as of May 2026.
   Wolt's rep said production keys come only after successful staging
   testing — needs to be requested separately.
-- **Multi-venue support** — current UI assumes one venue per site.
-  Delinka plans a second branch; supporting it cleanly would mean
-  per-zone / per-method venue mapping plus a venue selector on the
-  Settings tab.
+- **Multi-venue support** — per OC shipping group venue + pickup overrides
+  are implemented via host options (`ocws_group{N}_wolt_*`). The standalone
+  Wolt admin tab still shows a single *default* venue; confirm operators know
+  branch-specific IDs are edited under **קבוצות משלוח** in OC.
 - **Cancellation deadline** — Wolt docs say cancel is only valid until
   `order.pickup_started` arrives. We hide the Cancel button once
   status is `DELIVERED` / `CANCELLED` / `FAILED`, but not yet on

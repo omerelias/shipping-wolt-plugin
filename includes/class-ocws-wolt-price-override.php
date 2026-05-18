@@ -34,7 +34,11 @@ class OCWS_Wolt_Price_Override {
 		if ( ! OCWS_Wolt_Settings::is_enabled() || ! OCWS_Wolt_Api::is_configured() ) {
 			return $rates;
 		}
+//        var_dump($package);
 		$destination = isset( $package['destination'] ) ? $package['destination'] : array();
+		$destination   = OCWS_Wolt_Settings::merge_oc_checkout_destination(
+			is_array( $destination ) ? $destination : array()
+		);
 		if ( empty( $destination ) ) {
 			return $rates;
 		}
@@ -52,8 +56,11 @@ class OCWS_Wolt_Price_Override {
 			return $rates;
 		}
 
+		$group_id = OCWS_Wolt_Settings::resolve_group_id_from_destination( $destination );
+		if ( OCWS_Wolt_Settings::is_wolt_price_override_disabled_for_group( $group_id ) ) {
+			return $rates;
+		}
 		$result = OCWS_Wolt_Api::get_shipment_promise( $destination );
-
 		// On any failure — including the "address not entered yet" early-out —
 		// leave the host shipping plugin's price untouched. The user sees the
 		// fallback price, not a confusing 0. We only override when Wolt
