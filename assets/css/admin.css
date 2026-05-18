@@ -333,7 +333,7 @@
 	padding: 18px 20px;
 	background: var(--ocws-wolt-bg);
 	border: 1px solid var(--ocws-wolt-line);
-	border-radius: 10px; 
+	border-radius: 10px;  
 }
 
 .ocws-wolt-tools-section:last-of-type {
@@ -551,6 +551,7 @@
 
 .ocws-wolt-actions-th {
 	width: 1%;
+	min-width: 12.5rem;
 	white-space: nowrap;
 }
 
@@ -672,6 +673,7 @@
 	gap: 8px;
 	flex-wrap: wrap;
 	align-items: center;
+	min-width: 12.5rem;
 }
 
 .ocws-wolt-wrap .ocws-wolt-col-actions .button {
