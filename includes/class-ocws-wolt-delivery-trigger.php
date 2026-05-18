@@ -146,8 +146,10 @@ class OCWS_Wolt_Delivery_Trigger {
 		if ( $order->get_meta( self::META_DELIVERY_ID ) ) {
 			return array( 'success' => false, 'error' => __( 'Wolt delivery already exists for this order.', 'oc-wolt-drive' ) );
 		}
-		$payload = self::build_delivery_payload( $order );
-		$result  = OCWS_Wolt_Api::create_delivery( $order, $payload );
+		$group_id = OCWS_Wolt_Settings::resolve_group_id_from_order( $order );
+		$venue_id = OCWS_Wolt_Settings::get_effective_venue_id_for_group( $group_id );
+		$payload  = self::build_delivery_payload( $order, $group_id );
+		$result   = OCWS_Wolt_Api::create_delivery( $order, $payload, $venue_id );
 		if ( $result['success'] ) {
 			$order->update_meta_data( self::META_STATUS, 'created' );
 			$order->update_meta_data( self::META_DELIVERY_ID, $result['delivery_id'] );
@@ -205,9 +207,12 @@ class OCWS_Wolt_Delivery_Trigger {
 	 * Build delivery payload: address from order, scheduled_dropoff_time = slot_start + offset (ISO 8601) or omit for ASAP.
 	 *
 	 * @param WC_Order $order Order.
+	 * @param int      $group_id OC shipping group id (0 = use global Wolt pickup only).
 	 * @return array
 	 */
-	protected static function build_delivery_payload( $order ) {
+	protected static function build_delivery_payload( $order, $group_id = 0 ) {
+		$group_id        = $group_id ? absint( $group_id ) : OCWS_Wolt_Settings::resolve_group_id_from_order( $order );
+		$pickup_formatted = OCWS_Wolt_Settings::get_effective_pickup_address_for_group( $group_id );
 		$name = trim( $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name() );
 		if ( '' === $name ) {
 			$name = trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() );
@@ -246,7 +251,7 @@ class OCWS_Wolt_Delivery_Trigger {
 			'order_number'                => (string) $order->get_order_number(),
 			'pickup'                      => array(
 				'location' => array(
-					'formatted_address' => OCWS_Wolt_Settings::get_pickup_address(),
+					'formatted_address' => $pickup_formatted,
 				),
 			),
 			'dropoff'                     => $dropoff,

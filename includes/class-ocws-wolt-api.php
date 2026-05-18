@@ -50,9 +50,13 @@ class OCWS_Wolt_Api {
 	 * @param string $path Endpoint path without leading slash (e.g. "deliveries").
 	 * @return string|null Full URL, or null if base/venue not configured.
 	 */
-	protected static function venue_endpoint( $path ) {
-		$base     = self::get_api_url();
-		$venue_id = OCWS_Wolt_Settings::get_venue_id();
+	protected static function venue_endpoint( $path, $venue_id = null ) {
+		$base = self::get_api_url();
+		if ( null === $venue_id ) {
+			$venue_id = OCWS_Wolt_Settings::get_venue_id();
+		} else {
+			$venue_id = trim( (string) $venue_id );
+		}
 		if ( '' === $base || '' === $venue_id ) {
 			return null;
 		}
@@ -115,7 +119,9 @@ class OCWS_Wolt_Api {
 	 * @return array{ success: bool, cost?: float, error?: string, raw?: array }
 	 */
 	public static function get_shipment_promise( $destination ) {
-		$endpoint = self::venue_endpoint( 'shipment-promises' );
+		$group_id = OCWS_Wolt_Settings::resolve_group_id_from_destination( $destination );
+		$venue_id = OCWS_Wolt_Settings::get_effective_venue_id_for_group( $group_id );
+		$endpoint = self::venue_endpoint( 'shipment-promises', $venue_id );
 		if ( null === $endpoint ) {
 			return array( 'success' => false, 'error' => __( 'Wolt API URL or Venue ID not configured.', 'oc-wolt-drive' ) );
 		}
@@ -249,10 +255,17 @@ class OCWS_Wolt_Api {
 	 *
 	 * @param WC_Order $order Order.
 	 * @param array    $payload Delivery payload (address, scheduled_dropoff_time, etc.).
+	 * @param string|null $venue_id Optional venue id (per OC shipping group override).
 	 * @return array{ success: bool, delivery_id?: string, tracking_url?: string, error?: string, raw?: array }
 	 */
-	public static function create_delivery( $order, $payload ) {
-		$endpoint = self::venue_endpoint( 'deliveries' );
+	public static function create_delivery( $order, $payload, $venue_id = null ) {
+		if ( null !== $venue_id ) {
+			$venue_id = trim( (string) $venue_id );
+		}
+		if ( null === $venue_id || '' === $venue_id ) {
+			$venue_id = OCWS_Wolt_Settings::get_venue_id();
+		}
+		$endpoint = self::venue_endpoint( 'deliveries', $venue_id );
 		if ( null === $endpoint ) {
 			return array( 'success' => false, 'error' => __( 'Wolt API URL or Venue ID not configured.', 'oc-wolt-drive' ) );
 		}

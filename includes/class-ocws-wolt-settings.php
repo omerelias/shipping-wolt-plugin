@@ -132,6 +132,111 @@ class OCWS_Wolt_Settings {
 		return trim( (string) get_option( self::OPTION_VENUE_ID, '' ) );
 	}
 
+	/**
+	 * OC Advanced Shipping: optional per-group venue ID (option ocws_group{n}_wolt_venue_id).
+	 *
+	 * @param int $group_id From order meta ocws_shipping_group or checkout package.
+	 * @return string Effective venue id (non-empty when global or override is set).
+	 */
+	public static function get_effective_venue_id_for_group( $group_id ) {
+		$group_id = absint( $group_id );
+		if ( $group_id > 0 ) {
+			$opt = 'ocws_group' . $group_id . '_wolt_venue_id';
+			$v   = trim( (string) get_option( $opt, '' ) );
+			if ( '' !== $v ) {
+				return $v;
+			}
+		}
+		return self::get_venue_id();
+	}
+
+	/**
+	 * OC Advanced Shipping: optional per-group pickup line (option ocws_group{n}_wolt_pickup_address).
+	 *
+	 * @param int $group_id Shipping group id.
+	 * @return string
+	 */
+	public static function get_effective_pickup_address_for_group( $group_id ) {
+		$group_id = absint( $group_id );
+		if ( $group_id > 0 ) {
+			$opt = 'ocws_group' . $group_id . '_wolt_pickup_address';
+			$v   = trim( (string) get_option( $opt, '' ) );
+			if ( '' !== $v ) {
+				return $v;
+			}
+		}
+		return self::get_pickup_address();
+	}
+
+	/**
+	 * Resolve OC shipping group id from a WC package destination (checkout).
+	 *
+	 * @param array $destination Package destination.
+	 * @return int 0 when unknown.
+	 */
+	public static function resolve_group_id_from_destination( $destination ) {
+		if ( ! is_array( $destination ) ) {
+			return 0;
+		}
+		if ( ! empty( $destination['ocws_shipping_group'] ) ) {
+			return absint( $destination['ocws_shipping_group'] );
+		}
+		if ( function_exists( 'ocws_get_group_id_by_city' ) ) {
+			if ( ! empty( $destination['city_code'] ) ) {
+				$g = ocws_get_group_id_by_city( $destination['city_code'] );
+				if ( $g ) {
+					return (int) $g;
+				}
+			}
+			if ( ! empty( $destination['city'] ) ) {
+				$g = ocws_get_group_id_by_city( $destination['city'] );
+				if ( $g ) {
+					return (int) $g;
+				}
+			}
+		}
+		return 0;
+	}
+
+	/**
+	 * Resolve OC shipping group id from a completed order.
+	 *
+	 * @param \WC_Order $order Order.
+	 * @return int 0 when unknown.
+	 */
+	public static function resolve_group_id_from_order( $order ) {
+		if ( ! $order instanceof \WC_Order ) {
+			return 0;
+		}
+		$gid = absint( $order->get_meta( 'ocws_shipping_group' ) );
+		if ( $gid ) {
+			return $gid;
+		}
+		if ( ! function_exists( 'ocws_get_group_id_by_city' ) ) {
+			return 0;
+		}
+		$code = $order->get_meta( '_shipping_city_code' );
+		if ( ! $code ) {
+			$code = $order->get_meta( '_billing_city_code' );
+		}
+		if ( ! $code ) {
+			$city = $order->get_shipping_city();
+			if ( $city && ( is_numeric( $city ) || ( function_exists( 'ocws_is_hash' ) && ocws_is_hash( $city ) ) ) ) {
+				$code = $city;
+			} else {
+				$city = $order->get_billing_city();
+				if ( $city && ( is_numeric( $city ) || ( function_exists( 'ocws_is_hash' ) && ocws_is_hash( $city ) ) ) ) {
+					$code = $city;
+				}
+			}
+		}
+		if ( ! $code ) {
+			return 0;
+		}
+		$g = ocws_get_group_id_by_city( $code );
+		return $g ? (int) $g : 0;
+	}
+
 	public static function get_merchant_id() {
 		return trim( (string) get_option( self::OPTION_MERCHANT_ID, '' ) );
 	}
