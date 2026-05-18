@@ -50,11 +50,13 @@ woocommerce_order_status_{slug} action  (NOTE: slug WITHOUT the wc- prefix)
        │
        │  OCWS_Wolt_Delivery_Trigger::on_trigger_status()
        │  • Idempotent (returns early if META_DELIVERY_ID already set)
-       │  • Builds payload (recipient, parcels, scheduled_dropoff_time,
-       │    structured dropoff.location.address object)
+       │  • Builds payload (recipient {name+phone+email}, parcels,
+       │    scheduled_dropoff_time, structured dropoff.location.address)
        │  • POSTs to /v1/venues/{venue_id}/deliveries
        │  • Saves: META_DELIVERY_ID, META_WOLT_ORDER_REF,
-       │    META_WOLT_STATUS, META_TRACKING_URL
+       │    META_WOLT_STATUS, META_TRACKING_URL, META_TRACKING_ID,
+       │    META_PICKUP_ETA, META_DROPOFF_ETA_MIN/MAX,
+       │    META_COST_AMOUNT, META_COST_CURRENCY
        ▼
 Wolt accepts (HTTP 201) → courier dispatched
        │
@@ -66,8 +68,15 @@ OCWS_Wolt_Webhook::handle_webhook()
        │  • Decodes claims, flattens common shapes
        │  • Looks up order by wolt_order_reference_id → fallback
        │    to delivery id → fallback to merchant_order_reference_id
-       │  • Updates META_WOLT_STATUS, writes order note
+       │  • Updates META_WOLT_STATUS, writes order note, AND refreshes
+       │    META_PICKUP_ETA / META_DROPOFF_ETA_* / META_COST_AMOUNT /
+       │    META_DELIVERED_AT off the event details when present
 ```
+
+In parallel, the **customer** sees a Wolt-branded tracking card under
+the order summary on the thank-you page and "My Account → View order"
+(`OCWS_Wolt_Frontend`), plus a `Track your delivery: <url>` row in the
+WooCommerce customer emails (Processing, Completed).
 
 There is also a **manual "Create Wolt delivery now"** button on the
 order edit screen meta box (`OCWS_Wolt_Order_Meta_Box`) that hits the
@@ -172,6 +181,18 @@ Wolt expect minor here too.
 - We store both as separate meta keys and try `wolt_order_reference_id`
   first when matching events to orders
 
+### create-delivery response shape gotchas
+- `tracking.url` (nested), NOT `tracking_url` (flat) — the early parser
+  missed this and the tracking link silently stayed empty
+- `id` ≠ `wolt_order_reference_id` — both are 24-hex-char ObjectIds but
+  webhook events reference the latter, so storing only `id` makes
+  every event a "Order not found"
+- `status` is Wolt's courier state (`INFO_RECEIVED` etc.), separate
+  from our internal `created` / `failed` flag — store both
+- `dropoff.eta` is a single ISO string in create-delivery but a
+  `{ min, max }` object in webhook events — our extractor handles
+  both shapes
+
 ### Auto-dispatch must listen to TWO events, not one
 WC fires `woocommerce_order_status_{slug}` only on a status TRANSITION.
 Brand-new orders that are CREATED already in the trigger status
@@ -227,7 +248,10 @@ ONE venue id per site; multi-venue support is a future enhancement.
 - Domain path: `/languages` (loaded in `ocws_wolt_bootstrap()` via
   `load_plugin_textdomain()`)
 - POT file: `languages/oc-wolt-drive.pot` (~170 strings)
-- Hebrew starter template: `languages/oc-wolt-drive-he_IL.po`
+- Hebrew: `languages/oc-wolt-drive-he_IL.po` + compiled
+  `oc-wolt-drive-he_IL.mo`. **Full Hebrew translation is in place** —
+  167 strings done as of v1.3.0. WP automatically loads the `.mo`
+  on a site running `WPLANG=he_IL`.
 - **Regenerate the POT + auto-merge into existing .po** after touching
   any `__()` / `_e()` / `_n()`:
   ```
@@ -271,19 +295,29 @@ Rules of thumb so this stays true:
 shipping-wolt-plugin/
 ├── CLAUDE.md                     ← you are here
 ├── oc-wolt-drive.php             ← Plugin header, bootstrap, env guards,
-│                                   activation defaults
+│                                   HPOS compat declaration, helpers
 ├── readme.txt                    ← WP-style plugin readme
 ├── uninstall.php                 ← Deletes every ocws_wolt_* option
 ├── .gitignore                    ← Excludes .claude/, .idea/, etc.
 ├── LICENSE.txt                   ← GPL-2.0+
 ├── assets/
 │   ├── css/admin.css             ← Wolt-style design tokens + components
+│   ├── css/frontend.css          ← Customer thank-you tracking card
 │   └── js/admin.js               ← AJAX for test/generate/cancel/register
+├── bin/
+│   ├── make-pot.sh               ← Regenerate POT + msgmerge .po files
+│   └── make-pot.bat              ← Windows companion
+├── languages/
+│   ├── oc-wolt-drive.pot         ← Master translation template
+│   ├── oc-wolt-drive-he_IL.po    ← Hebrew translation source
+│   └── oc-wolt-drive-he_IL.mo    ← Compiled binary WP actually loads
 └── includes/
-    ├── class-ocws-wolt.php       ← Runtime loader (init() chain)
-    ├── class-ocws-wolt-admin.php ← Standalone admin page (4 tabs)
+    ├── class-ocws-wolt.php             ← Runtime loader (init() chain)
+    ├── class-ocws-wolt-admin.php       ← Standalone admin page (4 tabs)
+    ├── class-ocws-wolt-frontend.php    ← Customer-facing tracking card
+    │                                     + tracking-link row in WC emails
     ├── class-ocws-wolt-settings.php
-    ├── class-ocws-wolt-api.php   ← All HTTP calls to Wolt
+    ├── class-ocws-wolt-api.php         ← All HTTP calls to Wolt
     ├── class-ocws-wolt-price-override.php
     ├── class-ocws-wolt-delivery-trigger.php
     ├── class-ocws-wolt-order-meta-box.php
@@ -335,12 +369,18 @@ Order meta (per-order, prefixed `_ocws_wolt_*`):
 | Meta key | Set when |
 |---|---|
 | `_ocws_wolt_status` | Our internal state: `created` / `failed` |
-| `_ocws_wolt_delivery_id` | Wolt's `id` (24 hex chars) |
-| `_ocws_wolt_order_reference_id` | Wolt's `wolt_order_reference_id` (used to match webhook events) |
+| `_ocws_wolt_delivery_id` | Wolt's `id` from POST /deliveries (24 hex chars) |
+| `_ocws_wolt_order_reference_id` | Wolt's `wolt_order_reference_id` — what every webhook event references |
 | `_ocws_wolt_wolt_status` | Wolt's courier flow state: `INFO_RECEIVED`, `PICKED_UP`, `DELIVERED`, … |
-| `_ocws_wolt_tracking_url` | Customer-facing tracking page |
+| `_ocws_wolt_tracking_url` | Public tracking page (deep link to Wolt) |
+| `_ocws_wolt_tracking_id` | Short tracking code (suitable for SMS) |
+| `_ocws_wolt_pickup_eta` | ISO 8601 — when courier arrives at venue |
+| `_ocws_wolt_dropoff_eta_min` / `_max` | ISO 8601 — earliest / latest customer arrival |
+| `_ocws_wolt_cost_amount` | Wolt's price in MAJOR units (e.g. 42.00 ILS) |
+| `_ocws_wolt_cost_currency` | ISO 4217 |
+| `_ocws_wolt_delivered_at` | ISO 8601 set when `order.dropoff_completed` arrives |
 | `_ocws_wolt_last_error` | Last error string from Wolt if create failed |
-| `_ocws_wolt_last_event_at` | mysql timestamp of latest webhook |
+| `_ocws_wolt_last_event_at` | MySQL timestamp of latest webhook (sanity check) |
 
 Order meta is intentionally NOT removed on uninstall — historical
 orders keep their audit trail.
@@ -371,6 +411,28 @@ across every interactive element for keyboard accessibility.
 
 ---
 
+## Customer-facing surfaces (OCWS_Wolt_Frontend)
+
+Anything the BUYER sees lives in `class-ocws-wolt-frontend.php` —
+intentionally separated from the admin so it can be reasoned about
+independently.
+
+- **Thank-you + My Account "View order" tracking card** — hooked into
+  `woocommerce_order_details_after_order_table`. Renders nothing for
+  orders without a Wolt delivery. Picks status-aware copy:
+  "Delivery booked" / "Your order is on the way." /
+  "Delivered. Enjoy!" / "Delivery cancelled." + the delivery ETA
+  when known, then a big Wolt-cyan pill button to the tracking URL.
+- **Email tracking row** — hooked into
+  `woocommerce_email_order_meta_fields`. Adds a "Track your delivery"
+  row to customer-facing emails (Processing, Completed). Admin emails
+  are explicitly excluded via the `$sent_to_admin` flag.
+- **frontend.css** is enqueued only on `is_wc_endpoint_url('order-received')`
+  or `is_wc_endpoint_url('view-order')` — keeps the rest of the site
+  free of plugin styles.
+
+---
+
 ## Local dev / deployment
 
 - Local path: `C:\Users\User\PhpstormProjects\delinka\wp-content\plugins\shipping-wolt-plugin`
@@ -398,25 +460,28 @@ HTTP calls to Wolt are logged behind that flag with tags like
 Not blockers, but worth being aware of:
 
 - **Parcel price unit** — we send `parcels[i].price.amount` as major
-  units (e.g. `12.5`). Unverified whether Wolt expect minor units for
-  parcels too (they definitely do for the response `price.amount`).
-  If a future create-delivery rejects on parcel price, multiply by 100.
+  units (e.g. `12.5`). A successful 201 from sandbox confirms Wolt
+  accept major units here, despite minor units in the response
+  `price.amount`. Keep an eye on this when prod credentials arrive —
+  if rejected, multiply by 100.
 - **Production credentials** — sandbox works end-to-end as of May 2026.
   Wolt's rep said production keys come only after successful staging
   testing — needs to be requested separately.
 - **Multi-venue support** — current UI assumes one venue per site.
   Delinka plans a second branch; supporting it cleanly would mean
-  per-zone / per-method venue mapping.
+  per-zone / per-method venue mapping plus a venue selector on the
+  Settings tab.
 - **Cancellation deadline** — Wolt docs say cancel is only valid until
-  `order.pickup_started` arrives. We don't yet hide/disable the Cancel
-  button based on that event — should we? Currently we hide it once
-  status is `DELIVERED` / `CANCELLED` / `FAILED`.
+  `order.pickup_started` arrives. We hide the Cancel button once
+  status is `DELIVERED` / `CANCELLED` / `FAILED`, but not yet on
+  `pickup_started`. Should we?
 - **ETA delay** — Wolt recommend waiting 90 s after first
-  `order.pickup_eta_updated` before showing the ETA to customers as
-  "truthful". Not implemented; we'd need an outbound flow to surface
-  ETAs to customers, which currently we don't.
-- **Address format question to Wolt** — was originally asked, never
-  answered, eventually resolved empirically by the error messages.
+  `order.pickup_eta_updated` before treating the ETA as "truthful".
+  We surface ETAs immediately in admin + thank-you card; consider
+  hiding for the first 90 seconds.
+- **Production webhook secret rotation** — no automated rotation
+  workflow yet. To rotate: Generate → Save secret → Re-register
+  (UI already supports the chain).
 
 ---
 
