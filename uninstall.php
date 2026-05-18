@@ -25,7 +25,6 @@ $options = array(
 	'ocws_wolt_currency',
 	'ocws_wolt_method_id_prefix',
 	'ocws_wolt_language',
-	'ocws_wolt_min_preparation_time',
 	'ocws_wolt_age_check_18',
 	'ocws_wolt_subscribe_location',
 );

@@ -258,24 +258,15 @@ class OCWS_Wolt_Delivery_Trigger {
 			}
 		);
 
-		// Pickup options: tell Wolt how long the venue needs to prepare so the
-		// courier doesn't arrive too early. 0 means "send the default" — we
-		// still include the key so the value is explicit per delivery.
-		$pickup = array(
-			'location' => array(
-				'formatted_address' => $pickup_formatted,
-			),
-		);
-		$min_prep = OCWS_Wolt_Settings::get_min_preparation_time();
-		if ( $min_prep > 0 ) {
-			$pickup['options'] = array( 'min_preparation_time_minutes' => $min_prep );
-		}
-
 		$payload = array(
 			'merchant_order_reference_id' => (string) $order->get_id(),
 			'order_number'                => (string) $order->get_order_number(),
 			'language'                    => OCWS_Wolt_Settings::get_language(),
-			'pickup'                      => $pickup,
+			'pickup'                      => array(
+				'location' => array(
+					'formatted_address' => $pickup_formatted,
+				),
+			),
 			'dropoff'                     => $dropoff,
 			'recipient'                   => $recipient,
 			'parcels'                     => self::build_parcels( $order ),

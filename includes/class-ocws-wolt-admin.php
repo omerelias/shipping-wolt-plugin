@@ -253,11 +253,6 @@ class OCWS_Wolt_Admin {
 						__( 'Dispatch offset (minutes)', 'oc-wolt-drive' ),
 						__( 'Minutes after the chosen slot start at which Wolt should arrive (e.g. 30 = 16:30 if the slot is 16:00–19:00).', 'oc-wolt-drive' )
 					);
-					self::render_number(
-						OCWS_Wolt_Settings::OPTION_MIN_PREP_TIME,
-						__( 'Venue prep time (minutes)', 'oc-wolt-drive' ),
-						__( 'How many minutes the venue needs to prepare an order before the courier should arrive. Sent as pickup.options.min_preparation_time_minutes. Wolt default is 30.', 'oc-wolt-drive' )
-					);
 					self::render_text(
 						OCWS_Wolt_Settings::OPTION_LANGUAGE,
 						__( 'Tracking page language', 'oc-wolt-drive' ),
