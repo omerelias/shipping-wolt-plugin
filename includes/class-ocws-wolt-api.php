@@ -367,6 +367,73 @@ class OCWS_Wolt_Api {
 	}
 
 	/**
+	 * Ask Wolt which of the merchant's venues can serve a given dropoff
+	 * location, ranked best-first. Endpoint:
+	 *   POST /merchants/{merchant_id}/available-venues
+	 *
+	 * Body shape per docs:
+	 *   { dropoff: { location: { formatted_address, coordinates: { lat, lon } } },
+	 *     scheduled_dropoff_time? }
+	 *
+	 * Returns a flat list each entry is { venue_id, name, fee, estimate, raw }.
+	 *
+	 * @param array       $dropoff_location  { formatted_address, coordinates }.
+	 * @param string|null $scheduled_time    ISO 8601 timestamp, or null.
+	 * @return array{ success: bool, venues?: array, error?: string, raw?: array }
+	 */
+	public static function get_available_venues( $dropoff_location, $scheduled_time = null ) {
+		$endpoint = self::merchant_endpoint( 'available-venues' );
+		if ( null === $endpoint ) {
+			return array( 'success' => false, 'error' => __( 'Wolt API URL or Merchant ID not configured.', 'oc-wolt-drive' ) );
+		}
+		if ( ! is_array( $dropoff_location ) || empty( $dropoff_location ) ) {
+			return array( 'success' => false, 'error' => 'missing_dropoff_location' );
+		}
+
+		$body = array(
+			'dropoff' => array(
+				'location' => $dropoff_location,
+			),
+		);
+		if ( $scheduled_time ) {
+			$body['scheduled_dropoff_time'] = (string) $scheduled_time;
+		}
+
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( '[OC Wolt AV] body: ' . wp_json_encode( $body, JSON_UNESCAPED_UNICODE ) );
+		}
+
+		$resp = self::request( 'POST', $endpoint, $body, 15 );
+
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( '[OC Wolt AV] response (HTTP ' . $resp['code'] . '): ' . wp_json_encode( $resp['body'], JSON_UNESCAPED_UNICODE ) );
+		}
+
+		if ( $resp['error'] && 0 === $resp['code'] ) {
+			return array( 'success' => false, 'error' => $resp['error'] );
+		}
+		$raw = is_array( $resp['body'] ) ? $resp['body'] : array();
+		if ( $resp['code'] < 200 || $resp['code'] >= 300 ) {
+			return array( 'success' => false, 'error' => $resp['error'], 'raw' => $raw );
+		}
+
+		$venues = array();
+		foreach ( $raw as $entry ) {
+			if ( ! is_array( $entry ) || empty( $entry['pickup']['venue_id'] ) ) {
+				continue;
+			}
+			$venues[] = array(
+				'venue_id' => (string) $entry['pickup']['venue_id'],
+				'name'     => isset( $entry['pickup']['name'] ) ? $entry['pickup']['name'] : array(),
+				'fee'      => isset( $entry['fee'] )            ? $entry['fee']           : null,
+				'estimate' => isset( $entry['pre_estimate'] )   ? $entry['pre_estimate']  : null,
+				'pickup'   => isset( $entry['pickup'] )         ? $entry['pickup']        : array(),
+			);
+		}
+		return array( 'success' => true, 'venues' => $venues, 'raw' => $raw );
+	}
+
+	/**
 	 * Cancel an active Wolt delivery.
 	 *
 	 * Per Wolt docs: PATCH /order/{wolt_order_reference_id}/status/cancel.

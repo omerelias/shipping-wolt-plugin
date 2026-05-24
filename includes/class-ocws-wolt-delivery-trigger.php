@@ -31,6 +31,7 @@ class OCWS_Wolt_Delivery_Trigger {
 	const META_COURIER_LNG         = '_ocws_wolt_courier_lng';
 	const META_COURIER_AT          = '_ocws_wolt_courier_location_at';// MySQL timestamp of last location_updated event
 	const META_COURIER_INFO        = '_ocws_wolt_courier_info';      // JSON of {id,vehicle_type} from any event
+	const META_VENUE_ID            = '_ocws_wolt_venue_id';          // Venue actually used for THIS delivery (may differ from configured default when auto-resolved via available-venues)
 	const META_LAST_ERROR          = '_ocws_wolt_last_error';
 
 	/**
@@ -155,7 +156,17 @@ class OCWS_Wolt_Delivery_Trigger {
 		$group_id = OCWS_Wolt_Settings::resolve_group_id_from_order( $order );
 		$venue_id = OCWS_Wolt_Settings::get_effective_venue_id_for_group( $group_id );
 		$payload  = self::build_delivery_payload( $order, $group_id );
-		$result   = OCWS_Wolt_Api::create_delivery( $order, $payload, $venue_id );
+
+		// Ask Wolt which venue is actually best for this dropoff RIGHT NOW.
+		// Falls back silently to the configured per-group / global venue
+		// when the lookup fails or returns no options.
+		$resolved = self::resolve_venue_for_payload( $payload );
+		if ( '' !== $resolved ) {
+			$venue_id = $resolved;
+		}
+		$order->update_meta_data( self::META_VENUE_ID, $venue_id );
+
+		$result = OCWS_Wolt_Api::create_delivery( $order, $payload, $venue_id );
 		if ( $result['success'] ) {
 			$order->update_meta_data( self::META_STATUS, 'created' );
 			$order->update_meta_data( self::META_DELIVERY_ID, $result['delivery_id'] );
@@ -304,6 +315,61 @@ class OCWS_Wolt_Delivery_Trigger {
 	protected static function short_order_number( $order ) {
 		$id = (string) $order->get_id();
 		return str_pad( substr( $id, -3 ), 3, '0', STR_PAD_LEFT );
+	}
+
+	/**
+	 * Ask Wolt to pick the right venue for the dropoff in this delivery payload.
+	 *
+	 * Why this lives here, not in the price-override flow: at quote time the
+	 * customer might still be editing their address — calling available-venues
+	 * for every keystroke is wasteful. Once we get to dispatch the address is
+	 * frozen on the order, and we want the venue Wolt themselves think is
+	 * best at that moment.
+	 *
+	 * Returns an empty string on any failure so callers can fall back to the
+	 * configured venue without conditional juggling.
+	 *
+	 * @param array $payload The fully built create-delivery payload.
+	 * @return string Venue id, or '' when no decision could be reached.
+	 */
+	protected static function resolve_venue_for_payload( $payload ) {
+		if ( empty( $payload['dropoff']['location'] ) || ! is_array( $payload['dropoff']['location'] ) ) {
+			return '';
+		}
+		$loc = $payload['dropoff']['location'];
+
+		// available-venues expects { formatted_address, coordinates } — but our
+		// create-delivery dropoff uses a structured address object instead, so
+		// we flatten to a string here.
+		$addr   = isset( $loc['address'] ) && is_array( $loc['address'] ) ? $loc['address'] : array();
+		$parts  = array_filter( array(
+			isset( $addr['street'] )   ? (string) $addr['street']   : '',
+			isset( $addr['city'] )     ? (string) $addr['city']     : '',
+			isset( $addr['post_code'] )? (string) $addr['post_code']: '',
+			isset( $addr['country'] )  ? (string) $addr['country']  : '',
+		) );
+		$dropoff_location = array();
+		if ( ! empty( $parts ) ) {
+			$dropoff_location['formatted_address'] = implode( ', ', $parts );
+		}
+		if ( isset( $loc['lat'], $loc['lng'] ) && is_numeric( $loc['lat'] ) && is_numeric( $loc['lng'] ) ) {
+			$dropoff_location['coordinates'] = array(
+				'lat' => (float) $loc['lat'],
+				'lon' => (float) $loc['lng'],
+			);
+		}
+		if ( empty( $dropoff_location ) ) {
+			return '';
+		}
+
+		$scheduled = isset( $payload['dropoff']['options']['scheduled_time'] ) ? (string) $payload['dropoff']['options']['scheduled_time'] : null;
+		$result    = OCWS_Wolt_Api::get_available_venues( $dropoff_location, $scheduled );
+
+		if ( empty( $result['success'] ) || empty( $result['venues'] ) ) {
+			return '';
+		}
+		$first = $result['venues'][0];
+		return isset( $first['venue_id'] ) ? (string) $first['venue_id'] : '';
 	}
 
 	/**
