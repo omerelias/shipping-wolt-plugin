@@ -240,9 +240,25 @@ class OCWS_Wolt_Delivery_Trigger {
 		$dropoff = array(
 			'location' => self::build_dropoff_location( $order ),
 		);
-		$comments = self::build_dropoff_comments( $order );
-		if ( '' !== $comments ) {
-			$dropoff['comments'] = $comments;
+		// Wolt expects the singular key `comment` here, not `comments`.
+		$comment = self::build_dropoff_comments( $order );
+		if ( '' !== $comment ) {
+			$dropoff['comment'] = $comment;
+		}
+
+		// dropoff.options carries `is_no_contact` (driven by the existing
+		// "Leave at the door" checkbox) and `scheduled_time` — Wolt's
+		// docs put the scheduled timestamp HERE, not at the body root.
+		$dropoff_options = array();
+		if ( '1' === (string) $order->get_meta( 'ocws_leave_at_the_door' ) ) {
+			$dropoff_options['is_no_contact'] = true;
+		}
+		$scheduled = self::get_scheduled_dropoff_time_iso8601( $order );
+		if ( $scheduled ) {
+			$dropoff_options['scheduled_time'] = $scheduled;
+		}
+		if ( ! empty( $dropoff_options ) ) {
+			$dropoff['options'] = $dropoff_options;
 		}
 
 		// recipient.email is optional; array_filter drops it cleanly when the
@@ -260,8 +276,9 @@ class OCWS_Wolt_Delivery_Trigger {
 
 		$payload = array(
 			'merchant_order_reference_id' => (string) $order->get_id(),
-			'order_number'                => (string) $order->get_order_number(),
-			'language'                    => OCWS_Wolt_Settings::get_language(),
+			// Wolt asked for a 3-digit `order_number` — take the last 3 of
+			// the WC order id, padded with leading zeros for low values.
+			'order_number'                => self::short_order_number( $order ),
 			'pickup'                      => array(
 				'location' => array(
 					'formatted_address' => $pickup_formatted,
@@ -271,14 +288,22 @@ class OCWS_Wolt_Delivery_Trigger {
 			'recipient'                   => $recipient,
 			'parcels'                     => self::build_parcels( $order ),
 		);
-
-		$scheduled = self::get_scheduled_dropoff_time_iso8601( $order );
-		if ( $scheduled ) {
-			$payload['scheduled_dropoff_time'] = $scheduled;
-		}
         var_dump($payload);
         die;
 		return $payload;
+	}
+
+	/**
+	 * Wolt asked for `order_number` to be a 3-digit string. Take the last
+	 * three characters of the WC order id and left-pad with zeros so a
+	 * tiny order (e.g. id 7) still arrives as "007".
+	 *
+	 * @param WC_Order $order Order.
+	 * @return string
+	 */
+	protected static function short_order_number( $order ) {
+		$id = (string) $order->get_id();
+		return str_pad( substr( $id, -3 ), 3, '0', STR_PAD_LEFT );
 	}
 
 	/**
@@ -380,26 +405,30 @@ class OCWS_Wolt_Delivery_Trigger {
 			$qty   = max( 1, (int) $item->get_quantity() );
 			$total = (float) $item->get_total() + (float) $item->get_total_tax();
 			$unit  = $qty > 0 ? ( $total / $qty ) : $total;
-			for ( $i = 0; $i < $qty; $i++ ) {
-				$parcel = array(
-					'description' => $item->get_name(),
-					'identifier'  => sprintf( '%d-%d-%d', $order->get_id(), $item_id, $i ),
-					'price'       => array(
-						'amount'   => round( $unit, 2 ),
-						'currency' => $currency,
-					),
-				);
-				if ( $age_check ) {
-					$parcel['dropoff_restrictions'] = 'age_check_18';
-				}
-				$parcels[] = $parcel;
+
+			// One parcel entry per product line, with Wolt's `count` field
+			// carrying the quantity instead of emitting N duplicate entries.
+			// `price.amount` stays per-unit, matching Wolt's schema.
+			$parcel = array(
+				'description' => $item->get_name(),
+				'identifier'  => sprintf( '%d-%d', $order->get_id(), $item_id ),
+				'count'       => $qty,
+				'price'       => array(
+					'amount'   => round( $unit, 2 ),
+					'currency' => $currency,
+				),
+			);
+			if ( $age_check ) {
+				$parcel['dropoff_restrictions'] = 'age_check_18';
 			}
+			$parcels[] = $parcel;
 		}
 		if ( empty( $parcels ) ) {
 			$fallback = array(
 				/* translators: %s: WC order number */
 				'description' => sprintf( __( 'Order #%s', 'oc-wolt-drive' ), $order->get_order_number() ),
 				'identifier'  => (string) $order->get_id(),
+				'count'       => 1,
 				'price'       => array(
 					'amount'   => round( (float) $order->get_total() - (float) $order->get_shipping_total(), 2 ),
 					'currency' => $currency,

@@ -212,6 +212,16 @@ class OCWS_Wolt_Api {
 			$body['lon'] = (float) $destination['address_coords']['lng'];
 		}
 
+		// Wolt accept `language` at the root of shipment-promises (NOT at
+		// the root of create-delivery — they specifically asked us to drop
+		// it from there). The value is the 2-letter ISO code returned by
+		// OCWS_Wolt_Settings::get_language() (auto from determine_locale()
+		// when the option is left empty).
+		$lang = OCWS_Wolt_Settings::get_language();
+		if ( '' !== $lang ) {
+			$body['language'] = $lang;
+		}
+
 		return $body;
 	}
 
