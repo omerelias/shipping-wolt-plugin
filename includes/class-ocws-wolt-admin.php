@@ -36,6 +36,7 @@ class OCWS_Wolt_Admin {
 		add_action( 'wp_ajax_ocws_wolt_register_webhook',    array( __CLASS__, 'ajax_register_webhook' ) );
 		add_action( 'wp_ajax_ocws_wolt_unregister_webhook',  array( __CLASS__, 'ajax_unregister_webhook' ) );
 		add_action( 'wp_ajax_ocws_wolt_cancel_delivery',     array( __CLASS__, 'ajax_cancel_delivery' ) );
+		add_action( 'wp_ajax_ocws_wolt_generate_dispatch_key', array( __CLASS__, 'ajax_generate_dispatch_key' ) );
 	}
 
 	/**
@@ -427,6 +428,8 @@ class OCWS_Wolt_Admin {
 			</div>
 			<?php submit_button( __( 'Save secret', 'oc-wolt-drive' ) ); ?>
 		</form>
+
+		<?php self::render_dispatch_api_card(); ?>
 
 		<div class="ocws-wolt-card">
 			<h2><?php esc_html_e( 'Registration with Wolt', 'oc-wolt-drive' ); ?></h2>
@@ -1004,6 +1007,71 @@ class OCWS_Wolt_Admin {
 			)
 		);
 		wp_send_json_success( array( 'message' => __( 'Cancelled.', 'oc-wolt-drive' ) ) );
+	}
+
+	/**
+	 * Render the "Dispatch API" card in the Webhook tab: shows the public
+	 * REST endpoint URL + the bearer token with a Generate button + a
+	 * copy-paste-ready curl example.
+	 */
+	protected static function render_dispatch_api_card() {
+		$endpoint = rest_url( OCWS_Wolt_Dispatch_Api::ROUTE_NAMESPACE . OCWS_Wolt_Dispatch_Api::ROUTE );
+		$key      = OCWS_Wolt_Settings::get_dispatch_api_key();
+		$display  = '' !== $key ? $key : __( 'Click "Generate" to create a bearer token', 'oc-wolt-drive' );
+		?>
+		<div class="ocws-wolt-card">
+			<h2><?php esc_html_e( 'Dispatch API (internal)', 'oc-wolt-drive' ); ?></h2>
+			<p class="description">
+				<?php esc_html_e( 'Programmatically trigger Wolt dispatch for a WooCommerce order. Useful for external systems (CRM, automations, internal tools) that need to fire the dispatch without going through the WordPress admin. Idempotent: if a Wolt delivery already exists for the order, the endpoint just returns the current data.', 'oc-wolt-drive' ); ?>
+			</p>
+
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Endpoint', 'oc-wolt-drive' ); ?></th>
+					<td>
+						<input type="text" id="ocws-wolt-dispatch-endpoint" class="regular-text code" readonly value="<?php echo esc_attr( $endpoint ); ?>" />
+						<button type="button" class="button ocws-wolt-copy" data-copy-target="#ocws-wolt-dispatch-endpoint"><?php esc_html_e( 'Copy', 'oc-wolt-drive' ); ?></button>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Bearer token', 'oc-wolt-drive' ); ?></th>
+					<td>
+						<input type="text" id="ocws-wolt-dispatch-key" class="regular-text code"
+							readonly
+							value="<?php echo esc_attr( $display ); ?>"
+							placeholder="<?php esc_attr_e( 'Click Generate', 'oc-wolt-drive' ); ?>" />
+						<button type="button" class="button" id="ocws-wolt-generate-dispatch-key"><?php esc_html_e( 'Generate', 'oc-wolt-drive' ); ?></button>
+						<button type="button" class="button ocws-wolt-copy" data-copy-target="#ocws-wolt-dispatch-key"><?php esc_html_e( 'Copy', 'oc-wolt-drive' ); ?></button>
+						<span id="ocws-wolt-dispatch-key-msg" class="ocws-wolt-inline-msg"></span>
+						<p class="description"><?php esc_html_e( 'Generating replaces the existing token instantly. Anyone holding the old token loses access immediately.', 'oc-wolt-drive' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Usage', 'oc-wolt-drive' ); ?></th>
+					<td>
+						<pre class="ocws-wolt-codeblock">curl -X POST "<?php echo esc_html( $endpoint ); ?>" \
+  -H "Authorization: Bearer <?php echo esc_html( '' !== $key ? $key : 'YOUR_TOKEN' ); ?>" \
+  -H "Content-Type: application/json" \
+  -d '{"order_id": 17873}'</pre>
+						<p class="description"><?php esc_html_e( 'Accepts order_id (preferred) or order_number in the JSON body. Returns 200 with the full Wolt info (delivery_id, tracking, venue, ETAs, cost, courier), 401 on bad token, 404 if the order is missing, 502 if Wolt itself rejected the create.', 'oc-wolt-drive' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<?php
+	}
+
+	/**
+	 * AJAX: rotate the dispatch API bearer token. Anyone holding the old
+	 * token loses access from the moment we save the new one.
+	 */
+	public static function ajax_generate_dispatch_key() {
+		self::verify_ajax();
+		$key = function_exists( 'wp_generate_password' )
+			? wp_generate_password( 48, false, false )
+			: bin2hex( random_bytes( 24 ) );
+		OCWS_Wolt_Settings::set_dispatch_api_key( $key );
+		wp_send_json_success( array( 'key' => $key ) );
 	}
 
 	/**

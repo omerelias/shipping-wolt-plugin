@@ -872,3 +872,18 @@
 	gap: 10px;
 	flex-wrap: wrap;
 }
+
+.ocws-wolt-codeblock {
+	background: var(--ocws-wolt-bg);
+	border: 1px solid var(--ocws-wolt-line);
+	border-radius: 8px;
+	padding: 14px 16px;
+	margin: 0 0 8px;
+	font-family: Consolas, Monaco, "Courier New", monospace;
+	font-size: 12.5px;
+	color: var(--ocws-wolt-ink);
+	overflow-x: auto;
+	white-space: pre;
+	line-height: 1.55;
+	direction: ltr;
+}

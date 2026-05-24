@@ -34,6 +34,7 @@ class OCWS_Wolt_Settings {
 	const OPTION_LANGUAGE           = 'ocws_wolt_language';            // ISO 639-1 2-letter; '' = auto from determine_locale()
 	const OPTION_AGE_CHECK_18       = 'ocws_wolt_age_check_18';        // global flag — every parcel gets dropoff_restrictions
 	const OPTION_SUBSCRIBE_LOCATION = 'ocws_wolt_subscribe_location';  // opt-in to high-volume courier location webhook
+	const OPTION_DISPATCH_API_KEY   = 'ocws_wolt_dispatch_api_key';    // bearer token for the public POST /ocws-wolt/v1/dispatch endpoint
 
 	const SETTINGS_GROUP            = 'ocws_wolt_settings';
 	const SETTINGS_GROUP_WEBHOOK    = 'ocws_wolt_webhook_settings';
@@ -666,6 +667,18 @@ class OCWS_Wolt_Settings {
 
 	public static function is_location_subscription_enabled() {
 		return '1' === (string) get_option( self::OPTION_SUBSCRIBE_LOCATION, '' );
+	}
+
+	/**
+	 * Shared secret used to authorise the public dispatch REST endpoint.
+	 * Generated on demand via the admin's "Generate" button.
+	 */
+	public static function get_dispatch_api_key() {
+		return (string) get_option( self::OPTION_DISPATCH_API_KEY, '' );
+	}
+
+	public static function set_dispatch_api_key( $key ) {
+		update_option( self::OPTION_DISPATCH_API_KEY, sanitize_text_field( (string) $key ) );
 	}
 
 	public static function get_currency() {

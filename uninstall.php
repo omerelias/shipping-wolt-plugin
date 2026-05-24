@@ -27,6 +27,7 @@ $options = array(
 	'ocws_wolt_language',
 	'ocws_wolt_age_check_18',
 	'ocws_wolt_subscribe_location',
+	'ocws_wolt_dispatch_api_key',
 );
 
 foreach ( $options as $option ) {

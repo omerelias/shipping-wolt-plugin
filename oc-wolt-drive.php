@@ -3,7 +3,7 @@
  * Plugin Name:       OC Wolt Drive
  * Plugin URI:        https://github.com/omerelias/shipping-wolt-plugin
  * Description:       Wolt Drive courier integration for the OC Advanced Shipping plugin. Adds live pricing at checkout, automatic + manual delivery dispatch to Wolt, JWT-signed status webhooks, and an admin console.
- * Version:           1.4.0
+ * Version:           1.5.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Omer Elias
@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 /* ─── Constants ────────────────────────────────────────────────────────── */
 
-define( 'OCWS_WOLT_VERSION', '1.4.0' );
+define( 'OCWS_WOLT_VERSION', '1.5.0' );
 define( 'OCWS_WOLT_FILE', __FILE__ );
 define( 'OCWS_WOLT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OCWS_WOLT_URL', plugin_dir_url( __FILE__ ) );

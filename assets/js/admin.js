@@ -51,6 +51,33 @@
 			} );
 	} );
 
+	/* ─── Generate dispatch API key ───────────────────────────── */
+
+	$( '#ocws-wolt-generate-dispatch-key' ).on( 'click', function ( e ) {
+		e.preventDefault();
+		var $btn   = $( this );
+		var $field = $( '#ocws-wolt-dispatch-key' );
+		var $msg   = $( '#ocws-wolt-dispatch-key-msg' );
+		$msg.removeClass( 'is-ok is-bad' ).text( '' );
+		$btn.prop( 'disabled', true );
+
+		ajax( 'ocws_wolt_generate_dispatch_key' )
+			.done( function ( res ) {
+				if ( res && res.success && res.data && res.data.key ) {
+					$field.val( res.data.key );
+					$msg.addClass( 'is-ok' ).text( '✓' );
+				} else {
+					$msg.addClass( 'is-bad' ).text( 'Failed' );
+				}
+			} )
+			.fail( function () {
+				$msg.addClass( 'is-bad' ).text( 'Request failed.' );
+			} )
+			.always( function () {
+				$btn.prop( 'disabled', false );
+			} );
+	} );
+
 	/* ─── Copy buttons ─────────────────────────────────────────── */
 
 	$( '.ocws-wolt-copy' ).on( 'click', function ( e ) {
