@@ -288,8 +288,8 @@ class OCWS_Wolt_Delivery_Trigger {
 			'recipient'                   => $recipient,
 			'parcels'                     => self::build_parcels( $order ),
 		);
-        var_dump($payload);
-        die;
+//        var_dump($payload);
+//        die;
 		return $payload;
 	}
 
