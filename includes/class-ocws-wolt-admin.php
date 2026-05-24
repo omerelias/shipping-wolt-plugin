@@ -223,7 +223,13 @@ class OCWS_Wolt_Admin {
 	 * Render the main settings form.
 	 */
 	protected static function render_settings_tab() {
-		$statuses = wc_get_order_statuses();
+		// Prepend a "Disabled (manual only)" option so the operator can
+		// turn off auto-dispatch entirely without having to pick a status
+		// they don't actually want orders to flow through.
+		$statuses = array_merge(
+			array( '' => __( '— Disabled (manual dispatch only) —', 'oc-wolt-drive' ) ),
+			wc_get_order_statuses()
+		);
 		?>
 		<form method="post" action="options.php" class="ocws-wolt-form">
 			<?php settings_fields( OCWS_Wolt_Settings::SETTINGS_GROUP ); ?>
@@ -247,7 +253,7 @@ class OCWS_Wolt_Admin {
 						OCWS_Wolt_Settings::OPTION_TRIGGER_STATUS,
 						__( 'Auto-dispatch on status', 'oc-wolt-drive' ),
 						$statuses,
-						__( 'Order status that auto-creates the Wolt delivery. Manual dispatch is always available from the order screen.', 'oc-wolt-drive' )
+						__( 'Pick the order status that should auto-create the Wolt delivery. Choose "Disabled" to never auto-dispatch — you can still create deliveries manually from the order screen or via the dispatch API.', 'oc-wolt-drive' )
 					);
 					self::render_number(
 						OCWS_Wolt_Settings::OPTION_DISPATCH_OFFSET,

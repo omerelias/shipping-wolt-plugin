@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: OC Wolt Drive 1.3.0\n"
 "Report-Msgid-Bugs-To: https://github.com/omerelias/shipping-wolt-plugin/"
 "issues\n"
-"POT-Creation-Date: 2026-05-24T15:40:29+02:00\n"
+"POT-Creation-Date: 2026-05-24T15:54:08+02:00\n"
 "PO-Revision-Date: 2026-05-17 12:00+0300\n"
 "Last-Translator: Omer Elias\n"
 "Language-Team: Hebrew\n"
@@ -88,7 +88,7 @@ msgid "Webhook registered. ID stored. Wolt will start sending events."
 msgstr "ה-webhook נרשם. המזהה נשמר. וולט יתחילו לשלוח עדכונים."
 
 #: includes/class-ocws-wolt-admin.php:111
-#: includes/class-ocws-wolt-admin.php:1125
+#: includes/class-ocws-wolt-admin.php:1131
 msgid "Webhook unregistered."
 msgstr "רישום ה-webhook בוטל."
 
@@ -171,15 +171,19 @@ msgstr "חתימת Webhook"
 msgid "Host shipping plugin"
 msgstr "תוסף המשלוחים המארח"
 
-#: includes/class-ocws-wolt-admin.php:232
+#: includes/class-ocws-wolt-admin.php:230
+msgid "— Disabled (manual dispatch only) —"
+msgstr "— מושבת (שליחה ידנית בלבד) —"
+
+#: includes/class-ocws-wolt-admin.php:238
 msgid "General"
 msgstr "כללי"
 
-#: includes/class-ocws-wolt-admin.php:237
+#: includes/class-ocws-wolt-admin.php:243
 msgid "Enable Wolt Drive"
 msgstr "הפעל את Wolt Drive"
 
-#: includes/class-ocws-wolt-admin.php:238
+#: includes/class-ocws-wolt-admin.php:244
 msgid ""
 "Override shipping price with Wolt quote at checkout (falls back to default "
 "if Wolt is unavailable)."
@@ -187,34 +191,36 @@ msgstr ""
 "החלף את מחיר המשלוח בהצעת מחיר של וולט בצ׳קאוט (חוזר לברירת המחדל אם וולט לא "
 "זמינים)."
 
-#: includes/class-ocws-wolt-admin.php:242
+#: includes/class-ocws-wolt-admin.php:248
 msgid "Pickup address (venue)"
 msgstr "כתובת איסוף (venue)"
 
-#: includes/class-ocws-wolt-admin.php:243
+#: includes/class-ocws-wolt-admin.php:249
 msgid ""
 "Where Wolt picks up the order. Leave empty to fall back to the WooCommerce "
 "store address."
 msgstr ""
 "מאיפה וולט אוספים את ההזמנה. השאר ריק כדי להשתמש בכתובת החנות של WooCommerce."
 
-#: includes/class-ocws-wolt-admin.php:248
+#: includes/class-ocws-wolt-admin.php:254
 msgid "Auto-dispatch on status"
 msgstr "שליחה אוטומטית בסטטוס"
 
-#: includes/class-ocws-wolt-admin.php:250
+#: includes/class-ocws-wolt-admin.php:256
+#, fuzzy
 msgid ""
-"Order status that auto-creates the Wolt delivery. Manual dispatch is always "
-"available from the order screen."
+"Pick the order status that should auto-create the Wolt delivery. Choose "
+"\"Disabled\" to never auto-dispatch — you can still create deliveries "
+"manually from the order screen or via the dispatch API."
 msgstr ""
 "סטטוס ההזמנה שיוצר משלוח וולט באופן אוטומטי. שליחה ידנית תמיד זמינה מתוך "
 "עמוד ההזמנה."
 
-#: includes/class-ocws-wolt-admin.php:254
+#: includes/class-ocws-wolt-admin.php:260
 msgid "Dispatch offset (minutes)"
 msgstr "איחור המשלוח (דקות)"
 
-#: includes/class-ocws-wolt-admin.php:255
+#: includes/class-ocws-wolt-admin.php:261
 msgid ""
 "Minutes after the chosen slot start at which Wolt should arrive (e.g. 30 = "
 "16:30 if the slot is 16:00–19:00)."
@@ -222,11 +228,11 @@ msgstr ""
 "כמה דקות אחרי תחילת חלון הזמן השליח אמור להגיע (למשל 30 = 16:30 אם החלון הוא "
 "16:00–19:00)."
 
-#: includes/class-ocws-wolt-admin.php:259
+#: includes/class-ocws-wolt-admin.php:265
 msgid "Tracking page language"
 msgstr "שפת עמוד המעקב"
 
-#: includes/class-ocws-wolt-admin.php:260
+#: includes/class-ocws-wolt-admin.php:266
 msgid ""
 "Two-letter ISO 639-1 code (e.g. he, en). Leave empty to auto-detect from the "
 "site locale."
@@ -234,11 +240,11 @@ msgstr ""
 "קוד ISO 639-1 בן שתי אותיות (למשל he, en). השאר ריק לזיהוי אוטומטי מהשפה של "
 "האתר."
 
-#: includes/class-ocws-wolt-admin.php:266
+#: includes/class-ocws-wolt-admin.php:272
 msgid "Require 18+ verification (all deliveries)"
 msgstr "דרוש אימות גיל 18+ (כל המשלוחים)"
 
-#: includes/class-ocws-wolt-admin.php:267
+#: includes/class-ocws-wolt-admin.php:273
 msgid ""
 "Adds dropoff_restrictions: \"age_check_18\" to every parcel. The Wolt "
 "courier must verify the recipient is 18+ before handing the order over. "
@@ -246,24 +252,24 @@ msgid ""
 "etc.). Local age-law compliance remains the merchant's responsibility."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:274
+#: includes/class-ocws-wolt-admin.php:280
 msgid "API connection"
 msgstr "חיבור ל-API"
 
-#: includes/class-ocws-wolt-admin.php:279
+#: includes/class-ocws-wolt-admin.php:285
 msgid "API base URL"
 msgstr "כתובת בסיס של ה-API"
 
 #. translators: 1: sandbox URL, 2: production URL
-#: includes/class-ocws-wolt-admin.php:282
+#: includes/class-ocws-wolt-admin.php:288
 msgid "Sandbox: %1$s · Production: %2$s"
 msgstr "סנדבוקס: %1$s · פרודקשן: %2$s"
 
-#: includes/class-ocws-wolt-admin.php:291
+#: includes/class-ocws-wolt-admin.php:297
 msgid "API key (Merchant Key)"
 msgstr "מפתח API (Merchant Key)"
 
-#: includes/class-ocws-wolt-admin.php:292
+#: includes/class-ocws-wolt-admin.php:298
 msgid ""
 "Bearer token from Wolt. Stored as plaintext in WP options — protect database "
 "access."
@@ -271,19 +277,19 @@ msgstr ""
 "טוקן Bearer מוולט. נשמר כטקסט גלוי באופציות של WP — הקפד על אבטחת בסיס "
 "הנתונים."
 
-#: includes/class-ocws-wolt-admin.php:298
+#: includes/class-ocws-wolt-admin.php:304
 msgid "Venue ID"
 msgstr "מזהה Venue"
 
-#: includes/class-ocws-wolt-admin.php:299
+#: includes/class-ocws-wolt-admin.php:305
 msgid "Wolt venue identifier (path parameter for /v1/venues/{venue_id}/*)."
 msgstr "מזהה ה-venue של וולט (פרמטר בנתיב /v1/venues/{venue_id}/*)."
 
-#: includes/class-ocws-wolt-admin.php:303
+#: includes/class-ocws-wolt-admin.php:309
 msgid "Merchant ID"
 msgstr "מזהה Merchant"
 
-#: includes/class-ocws-wolt-admin.php:304
+#: includes/class-ocws-wolt-admin.php:310
 msgid ""
 "Used for /merchants/{merchant_id}/delivery-areas and similar venueless "
 "endpoints."
@@ -291,62 +297,62 @@ msgstr ""
 "בשימוש ב-/merchants/{merchant_id}/delivery-areas וב-endpoints נוספים שלא "
 "קשורים ל-venue."
 
-#: includes/class-ocws-wolt-admin.php:308
+#: includes/class-ocws-wolt-admin.php:314
 msgid "Currency"
 msgstr "מטבע"
 
-#: includes/class-ocws-wolt-admin.php:309
+#: includes/class-ocws-wolt-admin.php:315
 msgid "ISO 4217 code, e.g. ILS, USD. Used when sending parcel prices to Wolt."
 msgstr "קוד ISO 4217, למשל ILS, USD. בשימוש כששולחים מחירי חבילות לוולט."
 
-#: includes/class-ocws-wolt-admin.php:315
+#: includes/class-ocws-wolt-admin.php:321
 msgid "Test connection"
 msgstr "בדיקת חיבור"
 
-#: includes/class-ocws-wolt-admin.php:317
+#: includes/class-ocws-wolt-admin.php:323
 msgid "Run /delivery-areas call"
 msgstr "הרץ קריאה ל-/delivery-areas"
 
-#: includes/class-ocws-wolt-admin.php:319
+#: includes/class-ocws-wolt-admin.php:325
 msgid ""
 "Performs a read-only GET against the configured API URL to confirm "
 "credentials work."
 msgstr ""
 "מבצע קריאת GET לקריאה בלבד מול ה-API URL שהוגדר כדי לוודא שפרטי הגישה תקינים."
 
-#: includes/class-ocws-wolt-admin.php:326
+#: includes/class-ocws-wolt-admin.php:332
 msgid "Pricing markup"
 msgstr "תוספת מחיר"
 
-#: includes/class-ocws-wolt-admin.php:332
+#: includes/class-ocws-wolt-admin.php:338
 msgid "Markup type"
 msgstr "סוג תוספת"
 
-#: includes/class-ocws-wolt-admin.php:335
+#: includes/class-ocws-wolt-admin.php:341
 msgid "Fixed amount"
 msgstr "סכום קבוע"
 
-#: includes/class-ocws-wolt-admin.php:336
+#: includes/class-ocws-wolt-admin.php:342
 msgid "Percentage"
 msgstr "אחוז"
 
-#: includes/class-ocws-wolt-admin.php:343
+#: includes/class-ocws-wolt-admin.php:349
 msgid "Markup value"
 msgstr "ערך התוספת"
 
-#: includes/class-ocws-wolt-admin.php:344
+#: includes/class-ocws-wolt-admin.php:350
 msgid "Fixed amount (in store currency) or percentage (e.g. 10 = +10%)."
 msgstr "סכום קבוע (במטבע החנות) או אחוז (למשל 10 = +10%)."
 
-#: includes/class-ocws-wolt-admin.php:352
+#: includes/class-ocws-wolt-admin.php:358
 msgid "Advanced"
 msgstr "מתקדם"
 
-#: includes/class-ocws-wolt-admin.php:357
+#: includes/class-ocws-wolt-admin.php:363
 msgid "Subscribe to courier location updates"
 msgstr "הירשם לעדכוני מיקום שליח"
 
-#: includes/class-ocws-wolt-admin.php:358
+#: includes/class-ocws-wolt-admin.php:364
 msgid ""
 "When enabled, the Location button in the Deliveries tab opens a live map of "
 "the assigned courier. Wolt warn this is a HIGH-VOLUME webhook event (fires "
@@ -358,22 +364,22 @@ msgstr ""
 "לרשום מחדש את ה-webhook לאחר שינוי כדי שוולט יכלול אירועי "
 "order.location_updated."
 
-#: includes/class-ocws-wolt-admin.php:362
+#: includes/class-ocws-wolt-admin.php:368
 msgid "Host shipping method ID prefix"
 msgstr "תחילית מזהה שיטת המשלוח המארחת"
 
 #. translators: %s: default method id
-#: includes/class-ocws-wolt-admin.php:365
+#: includes/class-ocws-wolt-admin.php:371
 msgid ""
 "Shipping method ID prefix to recognise as eligible for Wolt dispatch. "
 "Default: %s"
 msgstr "תחילית מזהה שיטת משלוח שתזוהה כמתאימה לשליחה דרך וולט. ברירת מחדל: %s"
 
-#: includes/class-ocws-wolt-admin.php:390
+#: includes/class-ocws-wolt-admin.php:396
 msgid "Webhook endpoint"
 msgstr "נקודת קצה ל-Webhook"
 
-#: includes/class-ocws-wolt-admin.php:391
+#: includes/class-ocws-wolt-admin.php:397
 msgid ""
 "Provide this URL and the shared secret below to Wolt when registering the "
 "webhook (see the Wolt Drive webhook docs)."
@@ -381,22 +387,22 @@ msgstr ""
 "מסור לוולט את ה-URL הזה ואת ה-secret המשותף שלמטה בעת רישום ה-webhook (ראו "
 "את התיעוד של Wolt Drive)."
 
-#: includes/class-ocws-wolt-admin.php:395
+#: includes/class-ocws-wolt-admin.php:401
 msgid "URL"
 msgstr "כתובת URL"
 
-#: includes/class-ocws-wolt-admin.php:398
-#: includes/class-ocws-wolt-admin.php:423
-#: includes/class-ocws-wolt-admin.php:1033
-#: includes/class-ocws-wolt-admin.php:1044
+#: includes/class-ocws-wolt-admin.php:404
+#: includes/class-ocws-wolt-admin.php:429
+#: includes/class-ocws-wolt-admin.php:1039
+#: includes/class-ocws-wolt-admin.php:1050
 msgid "Copy"
 msgstr "העתק"
 
-#: includes/class-ocws-wolt-admin.php:407
+#: includes/class-ocws-wolt-admin.php:413
 msgid "Shared secret (HS256)"
 msgstr "Secret משותף (HS256)"
 
-#: includes/class-ocws-wolt-admin.php:409
+#: includes/class-ocws-wolt-admin.php:415
 msgid ""
 "You generate this secret here, then give it to Wolt at webhook registration. "
 "Wolt signs every event JWT with it; this plugin verifies the signature on "
@@ -406,20 +412,20 @@ msgstr ""
 "חותמים כל JWT של אירוע באמצעותו; התוסף מאמת את החתימה בכל בקשה נכנסת ודוחה "
 "כל מה שלא תואם."
 
-#: includes/class-ocws-wolt-admin.php:413
+#: includes/class-ocws-wolt-admin.php:419
 msgid "Secret"
 msgstr "Secret"
 
-#: includes/class-ocws-wolt-admin.php:421
+#: includes/class-ocws-wolt-admin.php:427
 msgid "Click \"Generate\" to create a new secret"
 msgstr "לחץ \"צור\" כדי לייצר secret חדש"
 
-#: includes/class-ocws-wolt-admin.php:422
-#: includes/class-ocws-wolt-admin.php:1043
+#: includes/class-ocws-wolt-admin.php:428
+#: includes/class-ocws-wolt-admin.php:1049
 msgid "Generate"
 msgstr "צור"
 
-#: includes/class-ocws-wolt-admin.php:424
+#: includes/class-ocws-wolt-admin.php:430
 msgid ""
 "Hash-equals verification, time-constant. Store securely; rotate by "
 "generating a new value and re-registering at Wolt."
@@ -427,58 +433,58 @@ msgstr ""
 "אימות בזמן קבוע (hash-equals). שמור היטב; להחלפת מפתח — צור ערך חדש ורשום "
 "מחדש אצל וולט."
 
-#: includes/class-ocws-wolt-admin.php:429
+#: includes/class-ocws-wolt-admin.php:435
 msgid "Save secret"
 msgstr "שמור secret"
 
-#: includes/class-ocws-wolt-admin.php:435
+#: includes/class-ocws-wolt-admin.php:441
 msgid "Registration with Wolt"
 msgstr "רישום אצל וולט"
 
 #. translators: %s: link
-#: includes/class-ocws-wolt-admin.php:442
+#: includes/class-ocws-wolt-admin.php:448
 msgid "Calls %s under the hood. You only need to do this once per merchant."
 msgstr "מבצע מאחורי הקלעים %s. צריך לעשות זאת רק פעם אחת לכל merchant."
 
-#: includes/class-ocws-wolt-admin.php:447
+#: includes/class-ocws-wolt-admin.php:453
 msgid "Wolt docs"
 msgstr "תיעוד וולט"
 
-#: includes/class-ocws-wolt-admin.php:468
+#: includes/class-ocws-wolt-admin.php:474
 msgid "Registered"
 msgstr "רשום"
 
-#: includes/class-ocws-wolt-admin.php:469
+#: includes/class-ocws-wolt-admin.php:475
 msgid "Not registered"
 msgstr "לא רשום"
 
-#: includes/class-ocws-wolt-admin.php:473
+#: includes/class-ocws-wolt-admin.php:479
 msgid "Wolt webhook ID:"
 msgstr "מזהה Webhook של וולט:"
 
-#: includes/class-ocws-wolt-admin.php:479
+#: includes/class-ocws-wolt-admin.php:485
 msgid "Re-register"
 msgstr "רישום מחדש"
 
-#: includes/class-ocws-wolt-admin.php:480
+#: includes/class-ocws-wolt-admin.php:486
 msgid "Unregister"
 msgstr "בטל רישום"
 
-#: includes/class-ocws-wolt-admin.php:483
+#: includes/class-ocws-wolt-admin.php:489
 msgid "Register webhook with Wolt"
 msgstr "רישום webhook אצל וולט"
 
-#: includes/class-ocws-wolt-admin.php:491
+#: includes/class-ocws-wolt-admin.php:497
 msgid ""
 "Fill in API URL, API Key, Merchant ID, and a webhook secret before "
 "registering."
 msgstr "מלא API URL, API Key, Merchant ID ו-secret של webhook לפני הרישום."
 
-#: includes/class-ocws-wolt-admin.php:507
+#: includes/class-ocws-wolt-admin.php:513
 msgid "Quote simulator"
 msgstr "סימולטור הצעת מחיר"
 
-#: includes/class-ocws-wolt-admin.php:508
+#: includes/class-ocws-wolt-admin.php:514
 msgid ""
 "See the live shipment quote from Wolt for any address. Optionally add a "
 "checkout-style time window to preview the scheduled customer dropoff time "
@@ -488,11 +494,11 @@ msgstr ""
 "צ׳קאוט כדי לצפות בזמן המסירה ללקוח שהתוסף ישלח (תחילת חלון + הקדמת האיסוף "
 "מההגדרות)."
 
-#: includes/class-ocws-wolt-admin.php:512
+#: includes/class-ocws-wolt-admin.php:518
 msgid "1. Destination"
 msgstr "1. יעד"
 
-#: includes/class-ocws-wolt-admin.php:513
+#: includes/class-ocws-wolt-admin.php:519
 msgid ""
 "Use a full address, coordinates, or both. Coordinates help when the address "
 "is vague or hard to geocode."
@@ -500,126 +506,126 @@ msgstr ""
 "השתמש בכתובת מלאה, קואורדינטות, או שניהם. קואורדינטות עוזרות כשהכתובת לא "
 "מדויקת או קשה ל-geocode."
 
-#: includes/class-ocws-wolt-admin.php:515
+#: includes/class-ocws-wolt-admin.php:521
 msgid "Address"
 msgstr "כתובת"
 
-#: includes/class-ocws-wolt-admin.php:516
+#: includes/class-ocws-wolt-admin.php:522
 msgid "Dizengoff St 50, Tel Aviv-Yafo"
 msgstr "דיזנגוף 50, תל אביב-יפו"
 
-#: includes/class-ocws-wolt-admin.php:516
+#: includes/class-ocws-wolt-admin.php:522
 msgid "Street, City"
 msgstr "רחוב, עיר"
 
-#: includes/class-ocws-wolt-admin.php:520
+#: includes/class-ocws-wolt-admin.php:526
 msgid "Latitude (optional)"
 msgstr "קו רוחב (אופציונלי)"
 
-#: includes/class-ocws-wolt-admin.php:521
+#: includes/class-ocws-wolt-admin.php:527
 msgid "e.g. 32.0853"
 msgstr "למשל 32.0853"
 
-#: includes/class-ocws-wolt-admin.php:524
+#: includes/class-ocws-wolt-admin.php:530
 msgid "Longitude (optional)"
 msgstr "קו אורך"
 
-#: includes/class-ocws-wolt-admin.php:525
+#: includes/class-ocws-wolt-admin.php:531
 msgid "e.g. 34.7818"
 msgstr "למשל 34.7818"
 
-#: includes/class-ocws-wolt-admin.php:531
+#: includes/class-ocws-wolt-admin.php:537
 msgid "2. Delivery window (optional)"
 msgstr "2. חלון משלוח (אופציונלי)"
 
-#: includes/class-ocws-wolt-admin.php:532
+#: includes/class-ocws-wolt-admin.php:538
 msgid ""
 "Same formats as at checkout. Leave empty to only preview pricing; the "
 "scheduled dropoff preview appears when both date and start time are valid."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:535
+#: includes/class-ocws-wolt-admin.php:541
 msgid "Date"
 msgstr "תאריך"
 
-#: includes/class-ocws-wolt-admin.php:536
+#: includes/class-ocws-wolt-admin.php:542
 msgid "e.g. 25/02/2026 (day/month/year)"
 msgstr "למשל 25/02/2026 (יום/חודש/שנה)"
 
-#: includes/class-ocws-wolt-admin.php:539
+#: includes/class-ocws-wolt-admin.php:545
 msgid "Window start"
 msgstr "סטטוס וולט"
 
-#: includes/class-ocws-wolt-admin.php:540
+#: includes/class-ocws-wolt-admin.php:546
 msgid "e.g. 16:00 (24-hour)"
 msgstr "למשל 16:00 (שעון 24)"
 
-#: includes/class-ocws-wolt-admin.php:546
+#: includes/class-ocws-wolt-admin.php:552
 msgid "Run simulation"
 msgstr "הרץ סימולציה"
 
-#: includes/class-ocws-wolt-admin.php:550
+#: includes/class-ocws-wolt-admin.php:556
 msgid "Simulation results"
 msgstr "תוצאות סימולציה"
 
-#: includes/class-ocws-wolt-admin.php:641
-#: includes/class-ocws-wolt-admin.php:976
+#: includes/class-ocws-wolt-admin.php:647
+#: includes/class-ocws-wolt-admin.php:982
 msgid "Forbidden."
 msgstr "אין הרשאה."
 
-#: includes/class-ocws-wolt-admin.php:652
-#: includes/class-ocws-wolt-admin.php:991
-#: includes/class-ocws-wolt-admin.php:1093
-#: includes/class-ocws-wolt-admin.php:1121
+#: includes/class-ocws-wolt-admin.php:658
+#: includes/class-ocws-wolt-admin.php:997
+#: includes/class-ocws-wolt-admin.php:1099
+#: includes/class-ocws-wolt-admin.php:1127
 msgid "Unknown error."
 msgstr "שגיאה לא ידועה."
 
-#: includes/class-ocws-wolt-admin.php:704
+#: includes/class-ocws-wolt-admin.php:710
 msgid "Shipment promise"
 msgstr "הצעת מחיר משלוח"
 
-#: includes/class-ocws-wolt-admin.php:708
+#: includes/class-ocws-wolt-admin.php:714
 msgid "Wolt quote"
 msgstr "עלות וולט"
 
-#: includes/class-ocws-wolt-admin.php:709
+#: includes/class-ocws-wolt-admin.php:715
 msgid "With your markup"
 msgstr "כולל תוספת"
 
-#: includes/class-ocws-wolt-admin.php:712
+#: includes/class-ocws-wolt-admin.php:718
 msgid "Error"
 msgstr "שגיאה"
 
-#: includes/class-ocws-wolt-admin.php:716
+#: includes/class-ocws-wolt-admin.php:722
 msgid "Scheduled dropoff time"
 msgstr "זמן מסירה מתוכנן"
 
-#: includes/class-ocws-wolt-admin.php:719
+#: includes/class-ocws-wolt-admin.php:725
 msgid "Includes your dispatch offset from Settings."
 msgstr "כולל את הקדמת האיסוף מההגדרות."
 
-#: includes/class-ocws-wolt-admin.php:721
+#: includes/class-ocws-wolt-admin.php:727
 msgid ""
 "Add a valid date and window start above, or a real order without a slot is "
 "sent as ASAP."
 msgstr ""
 
-#: includes/class-ocws-wolt-admin.php:781
+#: includes/class-ocws-wolt-admin.php:787
 msgid "Wolt deliveries"
 msgstr "משלוחי Wolt"
 
 #. translators: %d: total deliveries
-#: includes/class-ocws-wolt-admin.php:786
+#: includes/class-ocws-wolt-admin.php:792
 msgid "%d delivery"
 msgid_plural "%d deliveries"
 msgstr[0] "משלוח %d"
 msgstr[1] "%d משלוחים"
 
-#: includes/class-ocws-wolt-admin.php:795
+#: includes/class-ocws-wolt-admin.php:801
 msgid "No Wolt deliveries dispatched yet."
 msgstr "עדיין לא נשלחו משלוחי וולט."
 
-#: includes/class-ocws-wolt-admin.php:796
+#: includes/class-ocws-wolt-admin.php:802
 msgid ""
 "When orders move to the auto-dispatch status (or you click \"Create Wolt "
 "delivery now\" on an order), they will appear here."
@@ -627,141 +633,149 @@ msgstr ""
 "כאשר הזמנות יעברו לסטטוס של שליחה אוטומטית (או שתלחץ על \"צור משלוח Wolt "
 "עכשיו\" על הזמנה), הן יופיעו כאן."
 
-#: includes/class-ocws-wolt-admin.php:803
-#: includes/class-ocws-wolt-admin.php:903
+#: includes/class-ocws-wolt-admin.php:809
+#: includes/class-ocws-wolt-admin.php:909
 msgid "Order"
 msgstr "הזמנה"
 
-#: includes/class-ocws-wolt-admin.php:804
+#: includes/class-ocws-wolt-admin.php:810
 msgid "Customer"
 msgstr "לקוח"
 
-#: includes/class-ocws-wolt-admin.php:805
+#: includes/class-ocws-wolt-admin.php:811
 msgid "Dropoff address"
 msgstr "כתובת מסירה"
 
-#: includes/class-ocws-wolt-admin.php:806
+#: includes/class-ocws-wolt-admin.php:812
 msgid "Status"
 msgstr "סטטוס"
 
-#: includes/class-ocws-wolt-admin.php:807
+#: includes/class-ocws-wolt-admin.php:813
 msgid "ETA"
 msgstr "זמן הגעה"
 
-#: includes/class-ocws-wolt-admin.php:808
+#: includes/class-ocws-wolt-admin.php:814
 msgid "Cost"
 msgstr "עלות"
 
-#: includes/class-ocws-wolt-admin.php:809
+#: includes/class-ocws-wolt-admin.php:815
 msgid "Created"
 msgstr "נוצר"
 
-#: includes/class-ocws-wolt-admin.php:810
+#: includes/class-ocws-wolt-admin.php:816
 msgid "Actions"
 msgstr "פעולות"
 
-#: includes/class-ocws-wolt-admin.php:871
+#: includes/class-ocws-wolt-admin.php:877
 msgid "View error"
 msgstr "הצג שגיאה"
 
-#: includes/class-ocws-wolt-admin.php:899
+#: includes/class-ocws-wolt-admin.php:905
 msgid "Track"
 msgstr "מעקב"
 
-#: includes/class-ocws-wolt-admin.php:916
+#: includes/class-ocws-wolt-admin.php:922
 msgid "Location"
 msgstr "פעולות"
 
-#: includes/class-ocws-wolt-admin.php:923
+#: includes/class-ocws-wolt-admin.php:929
 msgid "Cancel"
 msgstr "בטל"
 
-#: includes/class-ocws-wolt-admin.php:973
+#: includes/class-ocws-wolt-admin.php:979
 msgid "Order ID and reason required."
 msgstr "נדרשים מזהה הזמנה וסיבה."
 
-#: includes/class-ocws-wolt-admin.php:981
+#: includes/class-ocws-wolt-admin.php:987
 #: includes/class-ocws-wolt-order-meta-box.php:165
 msgid "Order not found."
 msgstr "ההזמנה לא נמצאה."
 
-#: includes/class-ocws-wolt-admin.php:986
+#: includes/class-ocws-wolt-admin.php:992
 msgid "Order is missing wolt_order_reference_id — cannot cancel via API."
 msgstr "להזמנה חסר wolt_order_reference_id — לא ניתן לבטל דרך ה-API."
 
 #. translators: %s: error message returned by Wolt
-#: includes/class-ocws-wolt-admin.php:994
+#: includes/class-ocws-wolt-admin.php:1000
 msgid "Wolt: cancel failed — %s"
 msgstr "Wolt: הביטול נכשל — %s"
 
 #. translators: %s: reason
-#: includes/class-ocws-wolt-admin.php:1005
+#: includes/class-ocws-wolt-admin.php:1011
 msgid "Wolt: delivery cancelled (reason: %s)."
 msgstr "Wolt: המשלוח בוטל (סיבה: %s)."
 
-#: includes/class-ocws-wolt-admin.php:1009
+#: includes/class-ocws-wolt-admin.php:1015
 msgid "Cancelled."
 msgstr "בוטל."
 
-#: includes/class-ocws-wolt-admin.php:1020
+#: includes/class-ocws-wolt-admin.php:1026
 #, fuzzy
 msgid "Click \"Generate\" to create a bearer token"
 msgstr "לחץ \"צור\" כדי לייצר secret חדש"
 
-#: includes/class-ocws-wolt-admin.php:1023
+#: includes/class-ocws-wolt-admin.php:1029
 #, fuzzy
 msgid "Dispatch API (internal)"
 msgstr "איחור המשלוח (דקות)"
 
-#: includes/class-ocws-wolt-admin.php:1025
+#: includes/class-ocws-wolt-admin.php:1031
 msgid ""
 "Programmatically trigger Wolt dispatch for a WooCommerce order. Useful for "
 "external systems (CRM, automations, internal tools) that need to fire the "
 "dispatch without going through the WordPress admin. Idempotent: if a Wolt "
 "delivery already exists for the order, the endpoint just returns the current "
 "data."
-msgstr "הפעלה אוטומטית של שליחת Wolt להזמנת WooCommerce. שימושי עבור מערכות חיצוניות (CRM, אוטומציות, כלים פנימיים) שצריכות להפעיל את השליחה בלי לעבור דרך אדמין WordPress. אידמפוטנטי: אם קיים כבר משלוח Wolt להזמנה, ה-endpoint פשוט יחזיר את הנתונים הקיימים."
+msgstr ""
+"הפעלה אוטומטית של שליחת Wolt להזמנת WooCommerce. שימושי עבור מערכות חיצוניות "
+"(CRM, אוטומציות, כלים פנימיים) שצריכות להפעיל את השליחה בלי לעבור דרך אדמין "
+"WordPress. אידמפוטנטי: אם קיים כבר משלוח Wolt להזמנה, ה-endpoint פשוט יחזיר "
+"את הנתונים הקיימים."
 
-#: includes/class-ocws-wolt-admin.php:1030
+#: includes/class-ocws-wolt-admin.php:1036
 msgid "Endpoint"
 msgstr "נקודת קצה"
 
-#: includes/class-ocws-wolt-admin.php:1037
+#: includes/class-ocws-wolt-admin.php:1043
 msgid "Bearer token"
 msgstr "Bearer token"
 
-#: includes/class-ocws-wolt-admin.php:1042
+#: includes/class-ocws-wolt-admin.php:1048
 #, fuzzy
 msgid "Click Generate"
 msgstr "צור"
 
-#: includes/class-ocws-wolt-admin.php:1046
+#: includes/class-ocws-wolt-admin.php:1052
 msgid ""
 "Generating replaces the existing token instantly. Anyone holding the old "
 "token loses access immediately."
-msgstr "יצירת מפתח חדש מחליפה את הקיים מיידית. כל מי שמחזיק במפתח הישן מאבד גישה מיד."
+msgstr ""
+"יצירת מפתח חדש מחליפה את הקיים מיידית. כל מי שמחזיק במפתח הישן מאבד גישה מיד."
 
-#: includes/class-ocws-wolt-admin.php:1050
+#: includes/class-ocws-wolt-admin.php:1056
 msgid "Usage"
 msgstr "שימוש"
 
-#: includes/class-ocws-wolt-admin.php:1056
+#: includes/class-ocws-wolt-admin.php:1062
 msgid ""
 "Accepts order_id (preferred) or order_number in the JSON body. Returns 200 "
 "with the full Wolt info (delivery_id, tracking, venue, ETAs, cost, courier), "
 "401 on bad token, 404 if the order is missing, 502 if Wolt itself rejected "
 "the create."
-msgstr "מקבל order_id (מועדף) או order_number בגוף ה-JSON. מחזיר 200 עם כל המידע מ-Wolt (delivery_id, tracking, venue, ETAs, cost, courier), 401 על token שגוי, 404 אם ההזמנה לא קיימת, 502 אם Wolt דחה את היצירה."
+msgstr ""
+"מקבל order_id (מועדף) או order_number בגוף ה-JSON. מחזיר 200 עם כל המידע "
+"מ-Wolt (delivery_id, tracking, venue, ETAs, cost, courier), 401 על token "
+"שגוי, 404 אם ההזמנה לא קיימת, 502 אם Wolt דחה את היצירה."
 
-#: includes/class-ocws-wolt-admin.php:1088
+#: includes/class-ocws-wolt-admin.php:1094
 msgid "Generate a webhook secret first."
 msgstr "צור קודם secret ל-webhook."
 
-#: includes/class-ocws-wolt-admin.php:1103
+#: includes/class-ocws-wolt-admin.php:1109
 msgid "Webhook registered."
 msgstr "ה-webhook נרשם."
 
-#: includes/class-ocws-wolt-admin.php:1116
+#: includes/class-ocws-wolt-admin.php:1122
 msgid "No webhook is registered."
 msgstr "לא רשום webhook."
 
