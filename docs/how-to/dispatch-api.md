@@ -54,22 +54,22 @@ working the moment the new one is saved.
 
 ### Body
 
-JSON. Identify the order by **either** of these fields (use `order_id` when
+JSON. Identify the order by **either** of these fields (use `orderId` when
 you have it — it's the WC primary key and is unambiguous):
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `order_id` | integer | one of | WooCommerce internal order ID. |
-| `order_number` | string | one of | WooCommerce order number. Often the same as `order_id`, but differs when a sequential-numbering plugin is in use. |
+| `orderId` | integer | one of | WooCommerce internal order ID. |
+| `orderNumber` | string | one of | WooCommerce order number. Often the same as `orderId`, but differs when a sequential-numbering plugin is in use. |
 
 ```json
-{ "order_id": 17875 }
+{ "orderId": 17875 }
 ```
 
 or
 
 ```json
-{ "order_number": "17875" }
+{ "orderNumber": "17875" }
 ```
 
 ### Headers
@@ -95,33 +95,33 @@ the endpoint skips the create call and returns the current state with
   "success": true,
   "created": true,
   "order": {
-    "order_id": 17875,
-    "order_number": "17875",
-    "internal_status": "created",
-    "wolt_status": "INFO_RECEIVED",
-    "delivery_id": "6a1301dd31d37106234f271a",
-    "wolt_order_reference_id": "6a1301ddea3a5a7a06902c20",
+    "orderId": 17875,
+    "orderNumber": "17875",
+    "internalStatus": "created",
+    "woltStatus": "INFO_RECEIVED",
+    "deliveryId": "6a1301dd31d37106234f271a",
+    "woltOrderReferenceId": "6a1301ddea3a5a7a06902c20",
     "tracking": {
       "url": "https://daas-track.development.dev.woltapi.com/s/OFyY99u2KeVKzwWrDL3B",
       "id":  "OFyY99u2KeVKzwWrDL3B"
     },
     "venue": {
       "id": "69faed18542343b282d2887c",
-      "display_name": "Delinka Test Venue WD"
+      "displayName": "Delinka Test Venue WD"
     },
     "etas": {
       "pickup":       "2026-05-25T10:42:00+00:00",
-      "dropoff_min":  "",
-      "dropoff_max":  "",
-      "delivered_at": ""
+      "dropoffMin":  "",
+      "dropoffMax":  "",
+      "deliveredAt": ""
     },
     "cost": {
       "amount":   42,
       "currency": "ILS"
     },
     "courier":          null,
-    "customer_support": { "url": null, "email": null, "phone_number": null },
-    "last_error":       ""
+    "customerSupport": { "url": null, "email": null, "phoneNumber": null },
+    "lastError":       ""
   }
 }
 ```
@@ -132,25 +132,25 @@ the endpoint skips the create call and returns the current state with
 |---|---|---|
 | `success` | boolean | Always `true` for 2xx responses. |
 | `created` | boolean | `true` if a new Wolt delivery was created on this call. `false` if one already existed (idempotent return). |
-| `order.order_id` | integer | WooCommerce order id. |
-| `order.order_number` | string | WC order number (may differ from id with sequential-numbering plugins). |
-| `order.internal_status` | string | Plugin state: `"created"` or `"failed"`. |
-| `order.wolt_status` | string | Wolt's courier state. Progresses over time via webhooks: `INFO_RECEIVED` → `PICKUP_STARTED` → `PICKED_UP` → `DROPOFF_STARTED` → `DROPOFF_ARRIVAL` → `DELIVERED`. May also be `CANCELLED` / `REJECTED`. |
-| `order.delivery_id` | string | Wolt's internal delivery id (24 hex chars). |
-| `order.wolt_order_reference_id` | string | Wolt order reference id — what webhook events reference. Different value from `delivery_id`. |
+| `order.orderId` | integer | WooCommerce order id. |
+| `order.orderNumber` | string | WC order number (may differ from id with sequential-numbering plugins). |
+| `order.internalStatus` | string | Plugin state: `"created"` or `"failed"`. |
+| `order.woltStatus` | string | Wolt's courier state. Progresses over time via webhooks: `INFO_RECEIVED` → `PICKUP_STARTED` → `PICKED_UP` → `DROPOFF_STARTED` → `DROPOFF_ARRIVAL` → `DELIVERED`. May also be `CANCELLED` / `REJECTED`. |
+| `order.deliveryId` | string | Wolt's internal delivery id (24 hex chars). |
+| `order.woltOrderReferenceId` | string | Wolt order reference id — what webhook events reference. Different value from `deliveryId`. |
 | `order.tracking.url` | string | Public customer-facing tracking page. Safe to share with the recipient. |
 | `order.tracking.id` | string | Short tracking code (suitable for SMS). |
 | `order.venue.id` | string | Wolt venue id the delivery was dispatched from (auto-selected by Wolt's `/available-venues`). |
-| `order.venue.display_name` | string | Wolt's own label for the venue (e.g. `"Delinka Test Venue WD"`). |
+| `order.venue.displayName` | string | Wolt's own label for the venue (e.g. `"Delinka Test Venue WD"`). |
 | `order.etas.pickup` | ISO 8601 string | Estimated arrival of the courier at the venue. |
-| `order.etas.dropoff_min` | ISO 8601 string | Earliest estimated arrival at the customer. Empty until Wolt produce a dropoff ETA. |
-| `order.etas.dropoff_max` | ISO 8601 string | Latest estimated arrival at the customer. |
-| `order.etas.delivered_at` | ISO 8601 string | Set after the `order.dropoff_completed` webhook fires. Empty before that. |
+| `order.etas.dropoffMin` | ISO 8601 string | Earliest estimated arrival at the customer. Empty until Wolt produce a dropoff ETA. |
+| `order.etas.dropoffMax` | ISO 8601 string | Latest estimated arrival at the customer. |
+| `order.etas.deliveredAt` | ISO 8601 string | Set after the `order.dropoff_completed` webhook fires. Empty before that. |
 | `order.cost.amount` | number | Wolt's delivery price in **major currency units** (e.g. `42` = ₪42.00). Already converted from the agorot Wolt return on the wire. |
 | `order.cost.currency` | string | ISO 4217 (`ILS`, `USD`, etc.). |
-| `order.courier` | object \| null | `{ id, vehicle_type }` once a courier has been assigned (populated by webhook events from `order.pickup_started` onwards). |
-| `order.customer_support` | object | `{ url, email, phone_number }` — Wolt's support contact for this specific delivery, if they echo it back. Often null in sandbox. |
-| `order.last_error` | string | Last error message from Wolt, when applicable. Empty on success. |
+| `order.courier` | object \| null | `{ id, vehicleType }` once a courier has been assigned (populated by webhook events from `order.pickup_started` onwards). |
+| `order.customerSupport` | object | `{ url, email, phoneNumber }` — Wolt's support contact for this specific delivery, if they echo it back. Often null in sandbox. |
+| `order.lastError` | string | Last error message from Wolt, when applicable. Empty on success. |
 
 ETAs are **live** — they get refreshed on every Wolt webhook event. Calling
 this endpoint again later for the same order returns the freshest values
@@ -257,11 +257,11 @@ echo "Tracking: {$order['tracking']['url']}\n";
 ```python
 import os, requests
 
-def dispatch_wolt(order_id: int) -> dict:
+def dispatch_wolt(orderId: int) -> dict:
     r = requests.post(
         "https://delinka.deliz.co.il/wp-json/ocws-wolt/v1/dispatch",
         headers={"Authorization": f"Bearer {os.environ['OCWS_WOLT_TOKEN']}"},
-        json={"orderId": order_id},
+        json={"orderId": orderId},
         timeout=30,
     )
     r.raise_for_status()
@@ -285,8 +285,8 @@ print("Tracking:", order["tracking"]["url"])
   flow (admin UI → Deliveries tab → Cancel button → reason). There is no
   `DELETE` on this endpoint today.
 - **Wolt status evolves over time.** The first response after creation
-  will be `wolt_status: "INFO_RECEIVED"`. Wolt's webhooks then update
-  `wolt_status`, ETAs and `delivered_at` as the courier progresses.
+  will be `woltStatus: "INFO_RECEIVED"`. Wolt's webhooks then update
+  `woltStatus`, ETAs and `deliveredAt` as the courier progresses.
   Re-calling the endpoint reads the freshest values.
 - **Sandbox vs production.** The endpoint shape is identical. The plugin
   decides which Wolt environment to talk to based on the API URL configured
@@ -311,7 +311,7 @@ not a concern.
 | `401` on every call | Token wasn't sent, or it was rotated in the admin since you grabbed it. |
 | `502` with "Requires post_code OR (street AND city)" | The order's shipping address doesn't have a street + city the plugin can resolve. Check that the OC checkout fields (`_shipping_street`, `_shipping_city_name`) are populated on the order. |
 | `502` with "Wolt API URL or Venue ID not configured" | The plugin isn't fully configured yet — open WP admin → Wolt Drive → Settings. |
-| `wolt_status` stays `INFO_RECEIVED` for a long time | Expected in sandbox — no real courier is dispatched. In production this transitions automatically as the courier progresses. |
+| `woltStatus` stays `INFO_RECEIVED` for a long time | Expected in sandbox — no real courier is dispatched. In production this transitions automatically as the courier progresses. |
 | `tracking.url` is empty in the response | Wolt didn't return a tracking object. Open WP debug.log and look for `[OC Wolt CD] response` for the raw Wolt reply. |
 
 ---
