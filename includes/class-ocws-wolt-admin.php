@@ -1058,8 +1058,8 @@ class OCWS_Wolt_Admin {
 						<pre class="ocws-wolt-codeblock">curl -X POST "<?php echo esc_html( $endpoint ); ?>" \
   -H "Authorization: Bearer <?php echo esc_html( '' !== $key ? $key : 'YOUR_TOKEN' ); ?>" \
   -H "Content-Type: application/json" \
-  -d '{"order_id": 17873}'</pre>
-						<p class="description"><?php esc_html_e( 'Accepts order_id (preferred) or order_number in the JSON body. Returns 200 with the full Wolt info (delivery_id, tracking, venue, ETAs, cost, courier), 401 on bad token, 404 if the order is missing, 502 if Wolt itself rejected the create.', 'oc-wolt-drive' ); ?></p>
+  -d '{"orderId": 17873}'</pre>
+						<p class="description"><?php esc_html_e( 'Accepts orderId (preferred) or orderNumber in the JSON body. Response keys are camelCase (deliveryId, woltStatus, …) — .NET / JS friendly. Returns 200 with the full Wolt info, 401 on bad token, 404 if the order is missing, 502 if Wolt itself rejected the create.', 'oc-wolt-drive' ); ?></p>
 					</td>
 				</tr>
 			</table>

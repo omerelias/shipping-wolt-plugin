@@ -197,7 +197,7 @@ Error body shape:
 curl -X POST "https://delinka.deliz.co.il/wp-json/ocws-wolt/v1/dispatch" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"order_id": 17875}'
+  -d '{"orderId": 17875}'
 ```
 
 Just want to read state without creating? Call the same endpoint — if the
@@ -215,20 +215,20 @@ async function dispatchWoltDelivery(orderId) {
       'Authorization': `Bearer ${process.env.OCWS_WOLT_TOKEN}`,
       'Content-Type':  'application/json',
     },
-    body: JSON.stringify({ order_id: orderId }),
+    body: JSON.stringify({ orderId }),
   });
 
   const data = await res.json();
   if (!res.ok) {
     throw new Error(`Wolt dispatch failed (${res.status}): ${data.message || data.error}`);
   }
-  return data.order; // { delivery_id, tracking, venue, etas, cost, ... }
+  return data.order; // { deliveryId, tracking, venue, etas, cost, ... }
 }
 
 // Usage:
 const order = await dispatchWoltDelivery(17875);
 console.log('Track this delivery:', order.tracking.url);
-console.log('ETA range:', order.etas.dropoff_min, '–', order.etas.dropoff_max);
+console.log('ETA range:', order.etas.dropoffMin, '–', order.etas.dropoffMax);
 ```
 
 ### PHP (Guzzle)
@@ -243,11 +243,11 @@ $response = $client->post('/wp-json/ocws-wolt/v1/dispatch', [
         'Authorization' => 'Bearer ' . getenv('OCWS_WOLT_TOKEN'),
     ],
     'json' => [
-        'order_id' => 17875,
+        'orderId' => 17875,
     ],
 ]);
 
-$data = json_decode((string) $response->getBody(), true);
+$data  = json_decode((string) $response->getBody(), true);
 $order = $data['order'];
 echo "Tracking: {$order['tracking']['url']}\n";
 ```
@@ -261,7 +261,7 @@ def dispatch_wolt(order_id: int) -> dict:
     r = requests.post(
         "https://delinka.deliz.co.il/wp-json/ocws-wolt/v1/dispatch",
         headers={"Authorization": f"Bearer {os.environ['OCWS_WOLT_TOKEN']}"},
-        json={"order_id": order_id},
+        json={"orderId": order_id},
         timeout=30,
     )
     r.raise_for_status()

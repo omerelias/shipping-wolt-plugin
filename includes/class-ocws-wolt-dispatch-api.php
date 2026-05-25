@@ -6,7 +6,13 @@
  * Endpoint:
  *   POST /wp-json/ocws-wolt/v1/dispatch
  *   Headers: Authorization: Bearer <ocws_wolt_dispatch_api_key>
- *   Body:    { "order_id": 17873 }   OR   { "order_number": "873" }
+ *   Body:    { "orderId": 17873 }   OR   { "orderNumber": "873" }
+ *
+ * All JSON keys exposed by this endpoint are camelCase (orderId,
+ * deliveryId, woltStatus, customerSupport.phoneNumber, …) so .NET / C# /
+ * Java clients can deserialise without rename attributes. snake_case
+ * input keys (`order_id`, `order_number`) are still accepted so older
+ * integrations keep working; the response is always camelCase.
  *
  * Behaviour (idempotent):
  *   - If the order already has a Wolt delivery → return its current data
@@ -45,6 +51,11 @@ class OCWS_Wolt_Dispatch_Api {
 				'callback'            => array( __CLASS__, 'handle' ),
 				'permission_callback' => array( __CLASS__, 'check_auth' ),
 				'args'                => array(
+					// camelCase is the preferred form (friendlier to .NET / JS
+					// callers). snake_case is still accepted on input so older
+					// integrations keep working.
+					'orderId'      => array( 'type' => 'integer', 'required' => false ),
+					'orderNumber'  => array( 'type' => 'string',  'required' => false ),
 					'order_id'     => array( 'type' => 'integer', 'required' => false ),
 					'order_number' => array( 'type' => 'string',  'required' => false ),
 				),
@@ -101,15 +112,31 @@ class OCWS_Wolt_Dispatch_Api {
 	 * @return WP_REST_Response
 	 */
 	public static function handle( $request ) {
-		$body         = $request->get_json_params();
-		$order_id     = isset( $body['order_id'] )     ? (int) $body['order_id']                                   : 0;
-		$order_number = isset( $body['order_number'] ) ? sanitize_text_field( (string) $body['order_number'] )     : '';
+		$body = $request->get_json_params();
+		if ( ! is_array( $body ) ) {
+			$body = array();
+		}
 
-		// Allow order_id from query string too (for quick GET-style testing
-		// via curl `-G --data-urlencode order_id=…`).
+		// camelCase first, snake_case as fallback — accept either.
+		$order_id     = 0;
+		$order_number = '';
+
+		if ( isset( $body['orderId'] ) ) {
+			$order_id = (int) $body['orderId'];
+		} elseif ( isset( $body['order_id'] ) ) {
+			$order_id = (int) $body['order_id'];
+		}
+
+		if ( isset( $body['orderNumber'] ) ) {
+			$order_number = sanitize_text_field( (string) $body['orderNumber'] );
+		} elseif ( isset( $body['order_number'] ) ) {
+			$order_number = sanitize_text_field( (string) $body['order_number'] );
+		}
+
+		// Query-string fallback (useful for quick curl GET-style testing).
 		if ( ! $order_id && ! $order_number ) {
-			$order_id     = (int) $request->get_param( 'order_id' );
-			$order_number = (string) $request->get_param( 'order_number' );
+			$order_id     = (int) ( $request->get_param( 'orderId' )      ?: $request->get_param( 'order_id' ) );
+			$order_number = (string) ( $request->get_param( 'orderNumber' ) ?: $request->get_param( 'order_number' ) );
 		}
 
 		$order = self::resolve_order( $order_id, $order_number );
@@ -217,33 +244,75 @@ class OCWS_Wolt_Dispatch_Api {
 		$courier_info     = $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COURIER_INFO );
 
 		return array(
-			'order_id'                  => $order->get_id(),
-			'order_number'              => $order->get_order_number(),
-			'internal_status'           => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_STATUS ),
-			'wolt_status'               => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS ),
-			'delivery_id'               => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERY_ID ),
-			'wolt_order_reference_id'   => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_ORDER_REF ),
-			'tracking'                  => array(
+			'orderId'                => $order->get_id(),
+			'orderNumber'            => $order->get_order_number(),
+			'internalStatus'         => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_STATUS ),
+			'woltStatus'             => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_STATUS ),
+			'deliveryId'             => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERY_ID ),
+			'woltOrderReferenceId'   => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_WOLT_ORDER_REF ),
+			'tracking'               => array(
 				'url' => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_TRACKING_URL ),
 				'id'  => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_TRACKING_ID ),
 			),
-			'venue'                     => array(
-				'id'           => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_VENUE_ID ),
-				'display_name' => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_PICKUP_DISPLAY_NAME ),
+			'venue'                  => array(
+				'id'          => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_VENUE_ID ),
+				'displayName' => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_PICKUP_DISPLAY_NAME ),
 			),
-			'etas'                      => array(
+			'etas'                   => array(
 				'pickup'      => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_PICKUP_ETA ),
-				'dropoff_min' => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DROPOFF_ETA_MIN ),
-				'dropoff_max' => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DROPOFF_ETA_MAX ),
-				'delivered_at'=> $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERED_AT ),
+				'dropoffMin'  => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DROPOFF_ETA_MIN ),
+				'dropoffMax'  => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DROPOFF_ETA_MAX ),
+				'deliveredAt' => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_DELIVERED_AT ),
 			),
-			'cost'                      => array(
+			'cost'                   => array(
 				'amount'   => '' === $cost_amount ? null : (float) $cost_amount,
 				'currency' => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_COST_CURRENCY ),
 			),
-			'courier'                   => $courier_info ? json_decode( $courier_info, true ) : null,
-			'customer_support'          => $customer_support ? json_decode( $customer_support, true ) : null,
-			'last_error'                => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_LAST_ERROR ),
+			'courier'                => self::camelize_courier( $courier_info ),
+			'customerSupport'        => self::camelize_customer_support( $customer_support ),
+			'lastError'              => $order->get_meta( OCWS_Wolt_Delivery_Trigger::META_LAST_ERROR ),
+		);
+	}
+
+	/**
+	 * Wolt stores courier info as raw JSON in meta (snake_case from their
+	 * webhook payload). Convert to camelCase for our public response.
+	 *
+	 * @param string $json JSON blob from META_COURIER_INFO.
+	 * @return array|null
+	 */
+	protected static function camelize_courier( $json ) {
+		if ( ! $json ) {
+			return null;
+		}
+		$src = json_decode( (string) $json, true );
+		if ( ! is_array( $src ) ) {
+			return null;
+		}
+		return array(
+			'id'          => isset( $src['id'] )            ? $src['id']            : null,
+			'vehicleType' => isset( $src['vehicle_type'] )  ? $src['vehicle_type']  : null,
+		);
+	}
+
+	/**
+	 * Same idea for customer_support: { url, email, phone_number } → camelCase.
+	 *
+	 * @param string $json JSON blob from META_CUSTOMER_SUPPORT.
+	 * @return array|null
+	 */
+	protected static function camelize_customer_support( $json ) {
+		if ( ! $json ) {
+			return null;
+		}
+		$src = json_decode( (string) $json, true );
+		if ( ! is_array( $src ) ) {
+			return null;
+		}
+		return array(
+			'url'         => isset( $src['url'] )          ? $src['url']          : null,
+			'email'       => isset( $src['email'] )        ? $src['email']        : null,
+			'phoneNumber' => isset( $src['phone_number'] ) ? $src['phone_number'] : null,
 		);
 	}
 }
