@@ -84,12 +84,12 @@ class OCWS_Wolt_Order_Meta_Box {
 			if ( $dropoff_eta ) {
 				echo '<p><strong>' . esc_html__( 'Delivery ETA', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $dropoff_eta ) . '</p>';
 			}
-			if ( '' !== $cost_amount && null !== $cost_amount ) {
-				$formatted_cost = function_exists( 'wc_price' )
-					? wc_price( $cost_amount, array( 'currency' => $cost_currency ) )
-					: ( number_format_i18n( (float) $cost_amount, 2 ) . ' ' . esc_html( $cost_currency ) );
-				echo '<p><strong>' . esc_html__( 'Wolt cost', 'oc-wolt-drive' ) . ':</strong> ' . wp_kses_post( $formatted_cost ) . '</p>';
-			}
+//			if ( '' !== $cost_amount && null !== $cost_amount ) {
+//				$formatted_cost = function_exists( 'wc_price' )
+//					? wc_price( $cost_amount, array( 'currency' => $cost_currency ) )
+//					: ( number_format_i18n( (float) $cost_amount, 2 ) . ' ' . esc_html( $cost_currency ) );
+//				echo '<p><strong>' . esc_html__( 'Wolt cost', 'oc-wolt-drive' ) . ':</strong> ' . wp_kses_post( $formatted_cost ) . '</p>';
+//			}
 			if ( $pickup_display ) {
 				echo '<p><strong>' . esc_html__( 'Pickup venue (Wolt label)', 'oc-wolt-drive' ) . ':</strong> ' . esc_html( $pickup_display ) . '</p>';
 			}

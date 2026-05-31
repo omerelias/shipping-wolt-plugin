@@ -562,8 +562,20 @@ class OCWS_Wolt_Delivery_Trigger {
 	 * @return string|null
 	 */
 	public static function get_scheduled_dropoff_time_iso8601( $order ) {
+        $shipping_info = maybe_unserialize($order->get_meta('ocws_shipping_info'));
 		$date_str   = $order->get_meta( 'ocws_shipping_info_date' );
 		$slot_start = $order->get_meta( 'ocws_shipping_info_slot_start' );
+
+        if($shipping_info){
+            $date_str=(date( 'd/m/Y', strtotime( $shipping_info['date'] ) ));
+            $slot_start=$shipping_info['slot_start'];
+
+        }
+
+//        var_dump($date_str, $slot_start);
+//        die;
+//        var_dump($shipping_info = $item->get_meta('ocws_shipping_info'));
+//        die;
 		if ( ! $date_str || ! $slot_start ) {
 			return null;
 		}

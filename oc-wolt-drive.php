@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 /* ─── Constants ────────────────────────────────────────────────────────── */
 
-define( 'OCWS_WOLT_VERSION', '1.5.0' );
+define( 'OCWS_WOLT_VERSION', '1.5.1' );
 define( 'OCWS_WOLT_FILE', __FILE__ );
 define( 'OCWS_WOLT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OCWS_WOLT_URL', plugin_dir_url( __FILE__ ) );
